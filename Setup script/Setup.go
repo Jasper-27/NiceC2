@@ -7,10 +7,11 @@ import (
 )
 
 func main() {
+
 	app := &autostart.App{
-		Name:        "test",
-		DisplayName: "Just a Test App",
-		Exec:        []string{"sh", "-c", "echo autostart >> ~/autostart.txt"},
+		Name:        "NiceC2",
+		DisplayName: "NiceC2 command agent",
+		Exec:        []string{"sh", "-c", "say 'The NiceC2 process has started' "},
 	}
 
 	if app.IsEnabled() {
@@ -28,4 +29,7 @@ func main() {
 	}
 
 	log.Println("Done!")
+
+	test()
+
 }
