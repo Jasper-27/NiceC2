@@ -29,9 +29,6 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	dt := time.Now()
 	fmt.Println(dt.String())
 
-	// Sending a nice response
-	fmt.Fprint(w, "Node has checked in!")
-
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
 	var node node_check_in
@@ -41,6 +38,20 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Println(node.ID + " Checked in")
+
+	// Sending a nice response
+	// fmt.Fprint(w, "Node has checked in!")
+
+	//JSON reponse
+
+	var response = []byte(`
+	{
+		"ID": "TestNode", 
+		"command": "run", 
+		"details": "say 'Oooh it works'"
+	}`)
+
+	fmt.Fprintf(w, string(response))
 
 }
 

