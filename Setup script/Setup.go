@@ -30,6 +30,4 @@ func main() {
 
 	log.Println("Done!")
 
-	test()
-
 }
