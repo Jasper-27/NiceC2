@@ -2,6 +2,10 @@
 Comp3000 Final Year Project.
 
 
+## Links 
+
+Trello: https://trello.com/b/cnf4AldV/nicec2 
+
 ## Description 
 
 NiceC2 is a system for managing multiple computers on different networks. The system uses techniques often employed in command and control situations, hence the name. 
