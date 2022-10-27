@@ -12,15 +12,19 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/denisbrodbeck/machineid"
 )
 
 var command_server string = "http://localhost:8081"
-var NodeID string = "TestNode" // This will be a GUID at some point
+var NodeID string = "" // This will be a GUID at some point
 
 //global stuff for shortcuts
 var p = fmt.Println
 
 func main() {
+
+	NodeID, _ = machineid.ID()
 
 	test()
 
@@ -67,6 +71,8 @@ func checkIn() {
 
 	fmt.Println(res.StatusCode)
 
+	fmt.Println("here")
+
 	// Parse the JSON response
 	post := &command{}
 	derr := json.NewDecoder(res.Body).Decode(post)
@@ -74,6 +80,7 @@ func checkIn() {
 		panic(derr)
 	}
 
+	fmt.Println("And here")
 	// Output the JSON response
 	fmt.Println("ID: ", post.ID)
 	fmt.Println("Command: ", post.Command)

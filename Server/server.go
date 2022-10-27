@@ -46,10 +46,12 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	var response = []byte(`
 	{
-		"ID": "TestNode", 
+		"ID": "` + node.ID + `", 
 		"command": "run", 
 		"details": "say 'Oooh it works'"
 	}`)
+
+	fmt.Println(response)
 
 	fmt.Fprintf(w, string(response))
 

