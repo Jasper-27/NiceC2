@@ -1,15 +1,20 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 )
 
-var command_server string = "localhost:8081"
+var command_server string = "http://localhost:8081"
+var NodeID string = "TestNode" // This will be a GUID at some point
 
 //global stuff for shortcuts
 var p = fmt.Println
@@ -17,6 +22,60 @@ var p = fmt.Println
 func main() {
 
 	test()
+
+	checkIn()
+
+}
+
+type CheckIn struct {
+	ID string `json:"ID"`
+}
+
+func checkIn() {
+
+	data := map[string]string{"ID": NodeID}
+
+	json_data, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
+	if err != nil {
+		panic(err)
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	defer res.Body.Close()
+
+	fmt.Println(res.StatusCode)
+
+	// Parse the text response code
+	ResponseData, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(ResponseData))
+
+	// post := &CheckIn{}
+	// derr := json.NewDecoder(res.Body).Decode(post)
+	// if derr != nil {
+	// 	panic(derr)
+	// }
+
+	// if res.StatusCode != http.StatusCreated {
+	// 	panic(res.Status)
+	// }
 
 }
 
