@@ -10,6 +10,8 @@ import (
 
 func main() {
 
+	var TARGET_WORKING_DIRECTORY = "~/Desktop/NiceC2"
+
 	// NodeID := generateGUID()
 	NodeID, _ := machineid.ID()
 	fmt.Println(NodeID)
