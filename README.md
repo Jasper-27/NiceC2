@@ -24,3 +24,14 @@ Nope. There are many situations where someone would legitimately benefit from th
 Kinda, but with like Linux support, and you control the command server. 
 
 
+## Notes 
+
+### Requirments 
+
+One of the dependencies for the setup script requires GCC to be installed on the machine. This is a pain on Windows, but [Here](https://code.visualstudio.com/docs/cpp/config-mingw) is a link to some instructions.  
+
+
+### Trouble with AutoStarts 
+
+At the moment the startup script needs to be pointed at the compiled version of the agent. This is setup just for Windows at the moment. 
+
