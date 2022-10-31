@@ -10,25 +10,54 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/denisbrodbeck/machineid"
+	// "github.com/mitchellh/go-homedir"
 )
 
 var command_server string = "http://localhost:8081"
 var NodeID string = "" // This will be a GUID at some point
 
-//global stuff for shortcuts
+// Checking errors
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+// global stuff for shortcuts
 var p = fmt.Println
 
 func main() {
 
 	NodeID, _ = machineid.ID()
 
-	test()
+	// test()
 
-	checkIn()
+	// checkIn()
+
+	// Writing a file. I am pretty sure this is a ass backwards way of doing it
+
+	// fmt.Println(homedir.Dir())
+
+	var home string
+	home, _ = os.UserHomeDir()
+
+	var testFile string
+	testFile = filepath.Join(home, "Desktop", "proof.txt")
+
+	fmt.Println(testFile)
+
+	f, err := os.Create(testFile)
+	check(err)
+	defer f.Close()
+
+	n3, err := f.WriteString("This is some test data. Isn't it cool \n")
+	check(err)
+	fmt.Printf("wrote %d bytes\n", n3)
 
 }
 
