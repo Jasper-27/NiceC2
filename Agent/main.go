@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/denisbrodbeck/machineid"
 	// "github.com/mitchellh/go-homedir"
@@ -43,21 +44,44 @@ func main() {
 
 	// fmt.Println(homedir.Dir())
 
+	// Get's the current time, and formats it. god this is weird
+	current_time := time.Now().Format("2006.01.02 15:04:05")
+
 	var home string
 	home, _ = os.UserHomeDir()
 
 	var testFile string
-	testFile = filepath.Join(home, "Desktop", "proof.txt")
+	testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
 
 	fmt.Println(testFile)
 
-	f, err := os.Create(testFile)
-	check(err)
-	defer f.Close()
+	// f, err := os.Create(testFile)
+	// check(err)
+	// defer f.Close()
 
-	n3, err := f.WriteString("This is some test data. Isn't it cool \n")
-	check(err)
-	fmt.Printf("wrote %d bytes\n", n3)
+	// Opens/creates the file in a way that it can be appended to
+	file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	// Error if you can't open/edit the file
+	if err != nil {
+		fmt.Println("Could not open example.txt")
+		return
+	}
+
+	defer file.Close()
+
+	_, err2 := file.WriteString("The time is: " + current_time + "\n")
+
+	if err2 != nil {
+		fmt.Println("Could not write text to example.txt")
+
+	} else {
+		fmt.Println("Operation successful! Text has been appended to example.txt")
+	}
+
+	// // Sleeps 10 seconds, then does it again. Damn look at that recursion
+	// time.Sleep(10 * time.Second)
+	// main()
 
 }
 
