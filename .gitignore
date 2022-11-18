@@ -1,3 +1,4 @@
 
 *.exe
 Agent/agent
+*.DS_Store
