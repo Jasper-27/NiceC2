@@ -201,7 +201,8 @@ func getFIle() {
 	fmt.Println("Command: ", post.Command)
 	fmt.Println("Details: ", string(details))
 
-	//
+	// Write the string to file
+	script_to_file(string(details))
 
 }
 
@@ -252,4 +253,25 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 	return
 
+}
+
+func script_to_file(input string) {
+
+	f, err := os.Create("payloads/PowerShell.ps1")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	data := []byte(input)
+
+	_, err2 := f.Write(data)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	return
 }

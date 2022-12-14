@@ -57,8 +57,6 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		"details": "` + Command + `"
 	}`)
 
-	fmt.Println(response)
-
 	fmt.Fprintf(w, string(response))
 
 }
@@ -81,8 +79,6 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 		"command": "File",
 		"details": "` + script + `"
 	}`)
-
-	fmt.Println(response)
 
 	fmt.Fprintf(w, string(response))
 

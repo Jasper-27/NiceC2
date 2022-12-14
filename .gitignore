@@ -2,3 +2,4 @@
 *.exe
 Agent/agent
 *.DS_Store
+Agent/payloads/PowerShell.ps1
