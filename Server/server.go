@@ -95,3 +95,18 @@ func refresh_commands() string {
 
 	return command
 }
+
+func read_script(path string) string {
+
+	// Read the file
+	bFile, _ := ioutil.ReadFile(path)
+	script := string(bFile)
+	// script = strings.Replace(script, "\n", "", -1)
+
+	fmt.Println(script)
+
+	// here is where we turn the file into some nice data I think
+
+	return script
+
+}
