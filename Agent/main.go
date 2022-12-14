@@ -19,7 +19,9 @@ import (
 	// "github.com/mitchellh/go-homedir"
 )
 
-var command_server string = "http://localhost:8081"
+var command_server string = "http://192.168.0.69:8081"
+
+// var command_server string = "http://localhost:8081"
 var NodeID string = "" // This will be a GUID at some point
 
 // Checking errors
@@ -38,7 +40,7 @@ func main() {
 
 	// test()
 
-	// checkIn()
+	checkIn()
 
 	// Writing a file. I am pretty sure this is a ass backwards way of doing it
 

