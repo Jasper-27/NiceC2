@@ -146,8 +146,12 @@ func checkIn() {
 	//shrug
 	defer res.Body.Close()
 
-	fmt.Println(res.StatusCode)
-	// fmt.Println(string(res.Body))
+	// Bit of UI for you
+	if res.StatusCode == 200 {
+		fmt.Println("Response was OK")
+	} else {
+		fmt.Println("Response was Not OK")
+	}
 
 	post := &CheckIn_response{}
 	derr := json.NewDecoder(res.Body).Decode(post)
@@ -155,7 +159,7 @@ func checkIn() {
 		panic(derr)
 	}
 
-	fmt.Println(post.Message)
+	// fmt.Println(post.Message)
 }
 
 func old_checkIn() {
