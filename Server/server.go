@@ -45,99 +45,8 @@ type node struct {
 	Last_Check_In  string
 }
 
+// The main array of all nodes that have checked in.
 var nodes []node = read_nodes_from_file()
-
-func createNode(ID string, Hostname string, Platform string, Timestamp string) node {
-
-	newNode := node{ID, Hostname, Platform, Timestamp, Timestamp}
-	return newNode
-
-}
-
-func is_new_node(input_ID string) bool {
-
-	for _, value := range nodes {
-		if value.ID == input_ID {
-			return false
-		}
-	}
-
-	return true
-}
-
-// updates the node in the list
-func update_node(ID string, Timestamp string) {
-
-	node_position, error := find_node(ID)
-	if error != "" {
-		fmt.Println(error)
-		return
-	}
-
-	nodes[node_position].Last_Check_In = Timestamp
-
-}
-
-// Finds a nodes position in the slice
-func find_node(input_ID string) (int, string) {
-
-	for i, value := range nodes {
-		if value.ID == input_ID {
-			return i, ""
-		}
-	}
-
-	// returns 0 if it can't find anything.
-	// pretty sure this small brain, but ehh
-	return 0, "💀 Couldn't find node"
-}
-
-func display_all_nodes() {
-
-	fmt.Println("")
-
-	fmt.Println("[][][][][][][][][] Nodes [][][][][][][][][]")
-	fmt.Println()
-	for _, value := range nodes {
-		fmt.Println("NodeID:        " + value.ID)
-		fmt.Println("Hostname:      " + value.Hostname)
-		fmt.Println("Platform:      " + value.Platform)
-		fmt.Println("First Seen:    " + value.First_Check_In)
-		fmt.Println("Last Seen:     " + value.Last_Check_In)
-		fmt.Println("------------------ ===== ------------------")
-	}
-}
-
-func save_nodes_to_file() {
-	out, _ := json.MarshalIndent(nodes, "", "  ")
-	err := ioutil.WriteFile("nodes.json", out, 0644)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-}
-
-func read_nodes_from_file() []node {
-	fmt.Println("These are the nodes allready in the file")
-	fmt.Printf("\n\n")
-	content, err := ioutil.ReadFile("nodes.json")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	var nodes []node
-	err3 := json.Unmarshal(content, &nodes)
-	if err3 != nil {
-		fmt.Println("error with Unmarshal")
-		fmt.Println(err3.Error())
-	}
-
-	for _, x := range nodes {
-		fmt.Println(x.ID)
-	}
-
-	fmt.Printf("\n\n")
-	return nodes
-}
 
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
@@ -190,9 +99,8 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	// Send the response back
 	fmt.Fprintf(w, string(response))
 
-	fmt.Println()
-
-	display_all_nodes()
+	// Outputs all the nodes to the console
+	// display_all_nodes()
 
 	save_nodes_to_file()
 
@@ -269,26 +177,102 @@ func read_script(path string) string {
 
 }
 
-// structToJSON converts a struct to a JSON string
-func structToJSON(v interface{}) (string, error) {
-	// Marshal the struct into a JSON string
-	jsonBytes, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
+////////////////////////////////////
+/// Node slice  			    ////
+////////////////////////////////////
 
-	// Convert the JSON bytes to a striπng and return it
-	return string(jsonBytes), nil
+func createNode(ID string, Hostname string, Platform string, Timestamp string) node {
+
+	newNode := node{ID, Hostname, Platform, Timestamp, Timestamp}
+	return newNode
+
 }
 
-// sliceToJSON converts a slice of structs to a JSON string
-func sliceToJSON(slice interface{}) (string, error) {
-	// Marshal the slice of structs into a JSON string
-	jsonBytes, err := json.Marshal(slice)
-	if err != nil {
-		return "", err
+func is_new_node(input_ID string) bool {
+
+	for _, value := range nodes {
+		if value.ID == input_ID {
+			return false
+		}
 	}
 
-	// Convert the JSON bytes to a string and return it
-	return string(jsonBytes), nil
+	return true
+}
+
+// updates the node in the list
+func update_node(ID string, Timestamp string) {
+
+	node_position, error := find_node(ID)
+	if error != "" {
+		fmt.Println(error)
+		return
+	}
+
+	nodes[node_position].Last_Check_In = Timestamp
+
+}
+
+// Finds a nodes position in the slice
+func find_node(input_ID string) (int, string) {
+
+	for i, value := range nodes {
+		if value.ID == input_ID {
+			return i, ""
+		}
+	}
+
+	// returns 0 if it can't find anything.
+	// pretty sure this small brain, but ehh
+	return 0, "💀 Couldn't find node"
+}
+
+func display_all_nodes() {
+
+	fmt.Println("")
+
+	fmt.Println("[][][][][][][][][] Nodes [][][][][][][][][]")
+	fmt.Println()
+	for _, value := range nodes {
+		fmt.Println("NodeID:        " + value.ID)
+		fmt.Println("Hostname:      " + value.Hostname)
+		fmt.Println("Platform:      " + value.Platform)
+		fmt.Println("First Seen:    " + value.First_Check_In)
+		fmt.Println("Last Seen:     " + value.Last_Check_In)
+		fmt.Println("------------------ ===== ------------------")
+	}
+}
+
+////////////////////////////////////
+/// File Nonsense			    ////
+////////////////////////////////////
+
+func save_nodes_to_file() {
+	out, _ := json.MarshalIndent(nodes, "", "  ")
+	err := ioutil.WriteFile("nodes.json", out, 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func read_nodes_from_file() []node {
+	fmt.Println("These are the nodes allready in the file")
+	fmt.Printf("\n\n")
+	content, err := ioutil.ReadFile("nodes.json")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var nodes []node
+	err3 := json.Unmarshal(content, &nodes)
+	if err3 != nil {
+		fmt.Println("error with Unmarshal")
+		fmt.Println(err3.Error())
+	}
+
+	for _, x := range nodes {
+		fmt.Println(x.ID)
+	}
+
+	fmt.Printf("\n\n")
+	return nodes
 }
