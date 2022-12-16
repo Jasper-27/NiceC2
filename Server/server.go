@@ -45,7 +45,7 @@ type node struct {
 	Last_Check_In  string
 }
 
-var nodes []node
+var nodes []node = read_nodes_from_file()
 
 func createNode(ID string, Hostname string, Platform string, Timestamp string) node {
 
@@ -108,6 +108,37 @@ func display_all_nodes() {
 	}
 }
 
+func save_nodes_to_file() {
+	out, _ := json.MarshalIndent(nodes, "", "  ")
+	err := ioutil.WriteFile("nodes.json", out, 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func read_nodes_from_file() []node {
+	fmt.Println("These are the nodes allready in the file")
+	fmt.Printf("\n\n")
+	content, err := ioutil.ReadFile("nodes.json")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var nodes []node
+	err3 := json.Unmarshal(content, &nodes)
+	if err3 != nil {
+		fmt.Println("error with Unmarshal")
+		fmt.Println(err3.Error())
+	}
+
+	for _, x := range nodes {
+		fmt.Println(x.ID)
+	}
+
+	fmt.Printf("\n\n")
+	return nodes
+}
+
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	// Get's the current time
@@ -162,6 +193,8 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	fmt.Println()
 
 	display_all_nodes()
+
+	save_nodes_to_file()
 
 }
 
@@ -234,4 +267,28 @@ func read_script(path string) string {
 
 	return encoded_script
 
+}
+
+// structToJSON converts a struct to a JSON string
+func structToJSON(v interface{}) (string, error) {
+	// Marshal the struct into a JSON string
+	jsonBytes, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a striπng and return it
+	return string(jsonBytes), nil
+}
+
+// sliceToJSON converts a slice of structs to a JSON string
+func sliceToJSON(slice interface{}) (string, error) {
+	// Marshal the slice of structs into a JSON string
+	jsonBytes, err := json.Marshal(slice)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a string and return it
+	return string(jsonBytes), nil
 }
