@@ -71,7 +71,7 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	script := read_script("payloads/PowerShell.ps1")
+	script := read_script("payloads/shell.sh")
 
 	var response = []byte(`
 	{

