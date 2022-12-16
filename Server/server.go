@@ -48,7 +48,7 @@ type node struct {
 // The main array of all nodes that have checked in.
 var nodes []node = read_nodes_from_file()
 
-func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
+func old_nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	// Get's the current time
 	dt := time.Now()
@@ -135,9 +135,9 @@ func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 
 	// myRouter.HandleFunc("/test", shrug).Methods("GET")
-	myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
+	myRouter.HandleFunc("/old-checkin", old_nodeCheckIn).Methods("POST")
 
-	myRouter.HandleFunc("/payload", nodeSendFile).Methods("POST")
+	myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8081", myRouter))
 }
