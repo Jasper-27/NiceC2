@@ -5,3 +5,5 @@ Agent/agent
 Agent/payloads/PowerShell.ps1
 Agent/payloads/shell.sh
 Server/nodes.json
+Server/server.key
+*.crt

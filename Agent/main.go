@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 
@@ -20,8 +21,10 @@ import (
 
 // Setting the command server
 // var command_server string = "http://192.168.0.69:8081"
-// var command_server string = "http://localhost:8081"
-var command_server string = "http://192.168.0.29:8081"
+
+var command_server string = "https://localhost:8081"
+
+// var command_server string = "http://192.168.0.29:8081"
 
 // Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
@@ -76,7 +79,7 @@ func main() {
 
 	// fmt.Println(scriptOutput)
 
-	checkIn()
+	// checkIn()
 
 	// // Get's the current time, and formats it. god this is weird
 	// current_time := time.Now().Format("2006.01.02 15:04:05")
@@ -113,9 +116,20 @@ func main() {
 	// // time.Sleep(10 * time.Second)
 	// // main()
 
+	// Checks in every 10 seconds.
+	// for {
+	// 	time.Sleep(10 * time.Second)
+	// 	checkIn()
+	// }
+
+	checkIn()
+
 }
 
 func checkIn() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Getting the info
 	hostname, _ := os.Hostname()

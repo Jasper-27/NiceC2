@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 const banner string = `
@@ -182,15 +180,17 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
 func handleRequests() {
 
-	myRouter := mux.NewRouter().StrictSlash(true)
+	// myRouter := mux.NewRouter().StrictSlash(true)
 
 	// myRouter.HandleFunc("/test", shrug).Methods("GET")
-	myRouter.HandleFunc("/old-checkin", old_nodeCheckIn).Methods("POST")
+	// myRouter.HandleFunc("/old-checkin", old_nodeCheckIn).Methods("POST")
 
-	myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
-	myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
+	// myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
+	// myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
 
-	log.Fatal(http.ListenAndServe(":8081", myRouter))
+	http.HandleFunc("/checkin", nodeCheckIn)
+
+	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
 }
 
 func main() {
