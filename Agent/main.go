@@ -36,7 +36,8 @@ type CheckIn struct {
 }
 
 type CheckIn_response struct {
-	Message string `json:"message"`
+	Task string `json:"task"`
+	Arg  string `json:"arg"`
 }
 
 type command struct {
@@ -173,7 +174,30 @@ func checkIn() {
 		panic(derr)
 	}
 
-	fmt.Println(post.Message)
+	fmt.Println("Details of response")
+	fmt.Println("Task: " + post.Task)
+	fmt.Println("Arg: " + post.Arg)
+
+	// This is is where the tasks that the node should then do need to go
+	switch post.Task {
+	case "run script":
+		fmt.Println("Hello there")
+	case "shutdown":
+		shutdown()
+	case "run command":
+		runCommand(post.Arg)
+	default:
+		// Well if it doesn't match 🤷‍♀️
+
+	}
+
+}
+
+func shutdown() {
+
+	fmt.Println("Beep Boop. The computer should now shut down")
+
+	/// This is where the code to shutdown the PC will go
 }
 
 func old_checkIn() {

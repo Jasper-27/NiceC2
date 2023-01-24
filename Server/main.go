@@ -89,20 +89,15 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	var response = []byte(`
 	{
-		"Message": "Hello" 
+		"task": "run command",  
+		"arg" : "touch hello"
 		
 	}`)
 
 	// Send the response back
 	fmt.Fprintf(w, string(response))
 
-	// w.Write([]byte(`{"message": "hello world"}`))
-
-	// Outputs all the nodes to the console
-	// display_all_nodes()
-
 	save_nodes_to_file()
-
 }
 
 func old_nodeCheckIn(w http.ResponseWriter, req *http.Request) {
@@ -198,6 +193,7 @@ func handleRequests() {
 	// myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
 
 	http.HandleFunc("/checkin", nodeCheckIn)
+	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
 }
