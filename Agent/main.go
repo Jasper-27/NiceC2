@@ -173,7 +173,7 @@ func checkIn() {
 		panic(derr)
 	}
 
-	// fmt.Println(post.Message)
+	fmt.Println(post.Message)
 }
 
 func old_checkIn() {

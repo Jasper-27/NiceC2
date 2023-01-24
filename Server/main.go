@@ -82,10 +82,19 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("============= ----------- =============")
 
-	response := "Hello World"
+	// response := "Hello World"
 
 	// Send the response back
-	fmt.Fprintf(w, `{"message": `+response+`}`)
+	// fmt.Fprintf(w, `{"message": "hello world"}`)
+
+	var response = []byte(`
+	{
+		"Message": "Hello" 
+		
+	}`)
+
+	// Send the response back
+	fmt.Fprintf(w, string(response))
 
 	// w.Write([]byte(`{"message": "hello world"}`))
 
