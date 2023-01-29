@@ -73,11 +73,11 @@ func main() {
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
-	NodeID = "THis is a test 99"
+	// NodeID = "THis is a test 99"
 
 	// Checks in every 10 seconds.
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(1 * time.Second)
 
 		checkIn()
 

@@ -115,7 +115,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	// var response string
 
 	// Find that nodes task
-	Task_location, find_task_message := find_task(node_that_checked_in.ID)
+	Task_location, find_task_message := find_task_unsent(node_that_checked_in.ID)
 
 	// This handles sending back a blank response if no task is found
 	if find_task_message != "" {
@@ -125,19 +125,11 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, blank_response)
 
 	} else {
-		fmt.Println(Task_location)
-		fmt.Println(find_task_message)
-
-		fmt.Println("This is the task")
-		fmt.Println(task_queue[Task_location])
-
-		fmt.Println("This is what is going to be in the response: ")
 
 		var response = string(`{"taskID": "` + task_queue[Task_location].TaskID + `", "task": "` + task_queue[Task_location].Action + `",  "arg": "` + task_queue[Task_location].Content + `"}`)
 
-		fmt.Println(response)
-
-		task_queue[Task_location].Progress = "Sent"
+		// Stops the same command from being sent multiple times
+		task_queue[Task_location].Progress = "sent"
 
 		// Send the response back
 		fmt.Fprintf(w, response)
@@ -174,14 +166,6 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
 func handleRequests() {
 
-	// myRouter := mux.NewRouter().StrictSlash(true)
-
-	// myRouter.HandleFunc("/test", shrug).Methods("GET")
-	// myRouter.HandleFunc("/old-checkin", old_nodeCheckIn).Methods("POST")
-
-	// myRouter.HandleFunc("/checkin", nodeCheckIn).Methods("POST")
-	// myRouter.HandleFunc("/old-payload", nodeSendFile).Methods("POST")
-
 	http.HandleFunc("/checkin", nodeCheckIn)
 	// http.HandleFunc("/getPayload", getPayload)
 
@@ -190,17 +174,7 @@ func handleRequests() {
 
 func main() {
 
-	// fmt.Println(command_id)
-	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	// fmt.Println(command_id)
-	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	// fmt.Println(command_id)
-	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	// fmt.Println(command_id)
-	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	// fmt.Println(command_id)
-	// fmt.Println(banner)
-
+	// Make some hard coded tasks
 	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
 	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere"))
 
@@ -352,19 +326,38 @@ func create_task(node string, task string, arg string) Command {
 	// Not sure why i need to convert here, but 🤷‍♀️
 	ID_string := strconv.Itoa(taskID)
 
-	newCommand := Command{ID_string, node, task, arg, "Waiting"}
+	newCommand := Command{ID_string, node, task, arg, "waiting"}
 
 	return newCommand
 
 }
 
 // Finds a nodes position in the slice
-func find_task(input_ID string) (int, string) {
+func find_task(Node_input_ID string) (int, string) {
 
 	for i, value := range task_queue {
 
-		if string(value.NodeID) == input_ID {
+		if string(value.NodeID) == Node_input_ID {
 			return i, ""
+		}
+	}
+
+	// returns 0 if it can't find anything.
+	// pretty sure this small brain, but ehh
+	return 0, "💀 Couldn't find node"
+}
+
+// this is for finding a task that we want to get executed
+func find_task_unsent(Node_input_ID string) (int, string) {
+
+	for i, value := range task_queue {
+
+		if string(value.NodeID) == Node_input_ID {
+
+			if value.Progress == "waiting" {
+				return i, ""
+			}
+
 		}
 	}
 
