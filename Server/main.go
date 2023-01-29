@@ -23,13 +23,15 @@ const banner string = `
 
 `
 
+var command_id int = 0
+
 type Command struct {
 	NodeID  string `json:"NodeID"`
 	Action  string `json:"Action"`
 	Content string `json:"Command"`
 }
 
-type old_node_check_in struct {
+type check_in struct {
 	ID       string
 	Hostname string
 	Platform string
@@ -53,7 +55,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
-	var node_that_checked_in old_node_check_in
+	var node_that_checked_in check_in
 	err := decoder.Decode(&node_that_checked_in)
 	if err != nil {
 		panic(err)
@@ -89,6 +91,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	var response = []byte(`
 	{
+		"taskID": "123", 
 		"task": "run command",  
 		"arg" : "touch hello"
 		
@@ -100,69 +103,11 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	save_nodes_to_file()
 }
 
-func old_nodeCheckIn(w http.ResponseWriter, req *http.Request) {
-
-	// Get's the current time
-	dt := time.Now()
-
-	// Decode the json body
-	decoder := json.NewDecoder(req.Body)
-	var node_that_checked_in old_node_check_in
-	err := decoder.Decode(&node_that_checked_in)
-	if err != nil {
-		panic(err)
-	}
-
-	// Adding the node to the list (Needs to be only if new node)
-
-	if is_new_node(node_that_checked_in.ID) == true {
-		fmt.Println("Damn look it's a new node!")
-		nodes = append(nodes, createNode(node_that_checked_in.ID, node_that_checked_in.Hostname, node_that_checked_in.Platform, dt.String()))
-	} else {
-
-		update_node(node_that_checked_in.ID, dt.String())
-
-		fmt.Println("Node re-checked in")
-	}
-
-	// Output something pretty
-	fmt.Println()
-	fmt.Println("============= New Check in =============")
-
-	fmt.Println("ID: " + node_that_checked_in.ID)
-	fmt.Println("Hostname: " + node_that_checked_in.Hostname)
-	fmt.Println("Platform: " + node_that_checked_in.Platform)
-	fmt.Println("Time: " + dt.String())
-
-	fmt.Println("============= ----------- =============")
-
-	//JSON reponse
-
-	// Get a new command
-	Command := refresh_commands()
-
-	var response = []byte(`
-	{
-		"ID": "` + node_that_checked_in.ID + `", 
-		"command": "run", 
-		"details": "` + Command + `"
-	}`)
-
-	// Send the response back
-	fmt.Fprintf(w, string(response))
-
-	// Outputs all the nodes to the console
-	// display_all_nodes()
-
-	save_nodes_to_file()
-
-}
-
 func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
 	// Decode the json body
 	decoder := json.NewDecoder(req.Body)
-	var node old_node_check_in
+	var node check_in
 	err := decoder.Decode(&node)
 	if err != nil {
 		panic(err)
@@ -200,9 +145,18 @@ func handleRequests() {
 
 func main() {
 
-	fmt.Println(banner)
+	fmt.Println(command_id)
+	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	fmt.Println(command_id)
+	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	fmt.Println(command_id)
+	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	fmt.Println(command_id)
+	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	fmt.Println(command_id)
+	// fmt.Println(banner)
 
-	handleRequests()
+	// handleRequests()
 
 }
 
@@ -331,4 +285,27 @@ func read_nodes_from_file() []node {
 
 	fmt.Printf("\n\n")
 	return nodes
+}
+
+////////////////////////////////////
+/// Task queue  			    ////
+////////////////////////////////////
+
+func create_task(node string, task string, arg string) []byte {
+
+	var command_string = []byte(`
+	{
+		"taskID": "` + string(command_id) + `", 
+		"node": "` + node + `",  
+		"task": "` + task + `",  
+		"arg" : "` + arg + `"
+		
+	}`)
+
+	fmt.Println("New command created" + string(command_id))
+
+	command_id = command_id + 1
+
+	return command_string
+
 }

