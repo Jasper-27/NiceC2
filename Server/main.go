@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -23,12 +24,24 @@ const banner string = `
 
 `
 
-var command_id int = 0
+// Command ID. This will keep going up as commands are added to the queue.
+// It should never be bellow 0
+var taskID int = 1
+
+// type Command struct {
+// 	CommandID string `json:"CommandID"`
+// 	NodeID    string `json:"NodeID"`
+// 	Action    string `json:"Action"`
+// 	Content   string `json:"Command"`
+// 	Progress  string `json:"Progress"`
+// }
 
 type Command struct {
-	NodeID  string `json:"NodeID"`
-	Action  string `json:"Action"`
-	Content string `json:"Command"`
+	TaskID   string
+	NodeID   string
+	Action   string
+	Content  string
+	Progress string
 }
 
 type check_in struct {
@@ -48,7 +61,17 @@ type node struct {
 // The main array of all nodes that have checked in.
 var nodes []node = read_nodes_from_file()
 
+var task_queue []Command
+
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
+
+	var blank_response = string(`
+	{
+		"taskID": "0", 
+		"task": "",  
+		"arg" : ""
+		
+	}`)
 
 	// Get's the current time
 	dt := time.Now()
@@ -89,16 +112,38 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	// Send the response back
 	// fmt.Fprintf(w, `{"message": "hello world"}`)
 
-	var response = []byte(`
-	{
-		"taskID": "123", 
-		"task": "run command",  
-		"arg" : "touch hello"
-		
-	}`)
+	// var response string
 
-	// Send the response back
-	fmt.Fprintf(w, string(response))
+	// Find that nodes task
+	Task_location, find_task_message := find_task(node_that_checked_in.ID)
+
+	// This handles sending back a blank response if no task is found
+	if find_task_message != "" {
+		fmt.Println("No task for node")
+
+		// Send the blank response back
+		fmt.Fprintf(w, blank_response)
+
+	} else {
+		fmt.Println(Task_location)
+		fmt.Println(find_task_message)
+
+		fmt.Println("This is the task")
+		fmt.Println(task_queue[Task_location])
+
+		fmt.Println("This is what is going to be in the response: ")
+
+		var response = string(`{"taskID": "` + task_queue[Task_location].TaskID + `", "task": "` + task_queue[Task_location].Action + `",  "arg": "` + task_queue[Task_location].Content + `"}`)
+
+		fmt.Println(response)
+
+		task_queue[Task_location].Progress = "Sent"
+
+		// Send the response back
+		fmt.Fprintf(w, response)
+	}
+
+	fmt.Println(task_queue)
 
 	save_nodes_to_file()
 }
@@ -145,18 +190,26 @@ func handleRequests() {
 
 func main() {
 
-	fmt.Println(command_id)
-	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	fmt.Println(command_id)
-	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	fmt.Println(command_id)
-	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	fmt.Println(command_id)
-	fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
-	fmt.Println(command_id)
+	// fmt.Println(command_id)
+	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	// fmt.Println(command_id)
+	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	// fmt.Println(command_id)
+	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	// fmt.Println(command_id)
+	// fmt.Println(create_task("hello", "there", "GEneral Kenobi"))
+	// fmt.Println(command_id)
 	// fmt.Println(banner)
 
-	// handleRequests()
+	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere"))
+
+	fmt.Println("The current task queue")
+	fmt.Println(task_queue)
+	fmt.Println()
+	fmt.Println()
+
+	handleRequests()
 
 }
 
@@ -291,21 +344,31 @@ func read_nodes_from_file() []node {
 /// Task queue  			    ////
 ////////////////////////////////////
 
-func create_task(node string, task string, arg string) []byte {
+func create_task(node string, task string, arg string) Command {
 
-	var command_string = []byte(`
-	{
-		"taskID": "` + string(command_id) + `", 
-		"node": "` + node + `",  
-		"task": "` + task + `",  
-		"arg" : "` + arg + `"
-		
-	}`)
+	// Wouldn't want a small task ID
+	taskID = taskID + 1
 
-	fmt.Println("New command created" + string(command_id))
+	// Not sure why i need to convert here, but 🤷‍♀️
+	ID_string := strconv.Itoa(taskID)
 
-	command_id = command_id + 1
+	newCommand := Command{ID_string, node, task, arg, "Waiting"}
 
-	return command_string
+	return newCommand
 
+}
+
+// Finds a nodes position in the slice
+func find_task(input_ID string) (int, string) {
+
+	for i, value := range task_queue {
+
+		if string(value.NodeID) == input_ID {
+			return i, ""
+		}
+	}
+
+	// returns 0 if it can't find anything.
+	// pretty sure this small brain, but ehh
+	return 0, "💀 Couldn't find node"
 }

