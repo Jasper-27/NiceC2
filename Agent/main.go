@@ -48,6 +48,12 @@ type command struct {
 	Details string `json:"details"`
 }
 
+type Task_Response struct {
+	TaskID   string
+	Progress string // Completed / Failed
+	Result   string // Data from the task
+}
+
 // Checking errors
 func check(e error) {
 	if e != nil {
@@ -84,6 +90,38 @@ func main() {
 	}
 
 	// checkIn()
+
+}
+
+func send_response(response_to_task Task_Response) {
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// This seems very wrong. But seems to work
+	data := map[string]string{"TaskID": response_to_task.TaskID, "Progress": response_to_task.Progress, "Result": response_to_task.Result}
+
+	json_data, err := json.Marshal(data)
+	if err != nil {
+		log.Fatal(err)
+
+	}
+
+	r, err := http.NewRequest("POST", command_server+"/node_response", bytes.NewBuffer(json_data))
+	if err != nil {
+		panic(err)
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(res.Body)
 
 }
 
@@ -152,7 +190,7 @@ func checkIn() {
 	case "shutdown":
 		shutdown()
 	case "run command":
-		runCommand(post.Arg)
+		go handle_runCommand(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
@@ -221,6 +259,22 @@ func getFIle() {
 
 }
 
+func handle_runCommand(this_taskID string, command string) {
+
+	var response Task_Response
+
+	output, command_error_message := runCommand(command)
+	if command_error_message != "" {
+		response = Task_Response{this_taskID, "failed", output}
+	} else {
+		response = Task_Response{this_taskID, "complete", output}
+
+	}
+
+	send_response(response)
+
+}
+
 func runCommand(command string) (outString string, errorMessage string) {
 
 	var shell string
@@ -246,7 +300,8 @@ func runCommand(command string) (outString string, errorMessage string) {
 		out, err := exec.Command(shell, "-c", "pwd").Output()
 		if err != nil {
 			p(err.Error())
-			errorMessage = err.Error()
+			// errorMessage = err.Error()
+			errorMessage = "There was an error executing. "
 
 			return
 		}
@@ -258,8 +313,10 @@ func runCommand(command string) (outString string, errorMessage string) {
 	// run command, and if it causes an error create an error
 	out, err := exec.Command(shell, "-c", command).Output()
 	if err != nil {
+
+		fmt.Println("There was an error. Ohh dear")
 		p(err.Error())
-		errorMessage = err.Error()
+		errorMessage = "There was an error running the command"
 
 		return
 	}
@@ -304,4 +361,16 @@ func run_script(path_to_script string) (output string) {
 
 	return output
 
+}
+
+// structToJSON converts a struct to a JSON string
+func structToJSON(v interface{}) (string, error) {
+	// Marshal the struct into a JSON string
+	jsonBytes, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a striπng and return it
+	return string(jsonBytes), nil
 }

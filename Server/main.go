@@ -36,12 +36,18 @@ var taskID int = 1
 // 	Progress  string `json:"Progress"`
 // }
 
-type Command struct {
+type Task struct {
 	TaskID   string
 	NodeID   string
 	Action   string
 	Content  string
 	Progress string
+}
+
+type Task_Response struct {
+	TaskID   string
+	Progress string // Completed / Failed
+	Result   string // Data from the task
 }
 
 type check_in struct {
@@ -61,7 +67,7 @@ type node struct {
 // The main array of all nodes that have checked in.
 var nodes []node = read_nodes_from_file()
 
-var task_queue []Command
+var task_queue []Task
 
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
@@ -167,16 +173,53 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 func handleRequests() {
 
 	http.HandleFunc("/checkin", nodeCheckIn)
+	http.HandleFunc("/node_response", node_response)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+func node_response(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("A TASK HAS BEEN COMPLETED!!!!!s")
+
+	fmt.Println(req.Body)
+
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+
+	var response_to_task Task_Response
+
+	err := decoder.Decode(&response_to_task)
+	if err != nil {
+
+		fmt.Println("There was an error decoding the JSON in the task response")
+		panic(err)
+	}
+
+	fmt.Println(response_to_task)
+
+	// Now we have the result.
+
+	// change task in task list to complete
+	task_location, find_task_error := find_task_by_id(response_to_task.TaskID)
+	if find_task_error != "" {
+		fmt.Println(find_task_error)
+	}
+
+	task_queue[task_location].Progress = response_to_task.Progress
+
+	fmt.Println()
+
 }
 
 func main() {
 
 	// Make some hard coded tasks
 	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
 
 	fmt.Println("The current task queue")
 	fmt.Println(task_queue)
@@ -318,7 +361,7 @@ func read_nodes_from_file() []node {
 /// Task queue  			    ////
 ////////////////////////////////////
 
-func create_task(node string, task string, arg string) Command {
+func create_task(node string, task string, arg string) Task {
 
 	// Wouldn't want a small task ID
 	taskID = taskID + 1
@@ -326,7 +369,7 @@ func create_task(node string, task string, arg string) Command {
 	// Not sure why i need to convert here, but 🤷‍♀️
 	ID_string := strconv.Itoa(taskID)
 
-	newCommand := Command{ID_string, node, task, arg, "waiting"}
+	newCommand := Task{ID_string, node, task, arg, "waiting"}
 
 	return newCommand
 
@@ -359,6 +402,22 @@ func find_task_unsent(Node_input_ID string) (int, string) {
 			}
 
 		}
+	}
+
+	// returns 0 if it can't find anything.
+	// pretty sure this small brain, but ehh
+	return 0, "💀 Couldn't find node"
+}
+
+// this is for finding a task that we want to get executed
+func find_task_by_id(input_task_id string) (int, string) {
+
+	for i, value := range task_queue {
+
+		if string(value.TaskID) == input_task_id {
+			return i, ""
+		}
+
 	}
 
 	// returns 0 if it can't find anything.
