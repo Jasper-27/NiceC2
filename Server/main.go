@@ -34,34 +34,6 @@ var nodes []node = read_nodes_from_file()
 // The array holding the queue of tasks
 var task_queue []Task
 
-type Task struct {
-	TaskID   string
-	NodeID   string
-	Action   string
-	Content  string
-	Progress string
-}
-
-type Task_Response struct {
-	TaskID   string
-	Progress string // Completed / Failed
-	Result   string // Data from the task
-}
-
-type check_in struct {
-	ID       string
-	Hostname string
-	Platform string
-}
-
-type node struct {
-	ID             string
-	Hostname       string
-	Platform       string
-	First_Check_In string
-	Last_Check_In  string
-}
-
 func main() {
 
 	// Make some hard coded tasks
