@@ -108,7 +108,8 @@ func send_response(response_to_task Task_Response) {
 
 	r, err := http.NewRequest("POST", command_server+"/node_response", bytes.NewBuffer(json_data))
 	if err != nil {
-		panic(err)
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
 	}
 
 	// Add the header to say that it's json
@@ -118,7 +119,8 @@ func send_response(response_to_task Task_Response) {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
 	}
 
 	fmt.Println(res.Body)
@@ -138,12 +140,14 @@ func checkIn() {
 
 	json_data, err := json.Marshal(data)
 	if err != nil {
-		log.Fatal(err)
+		// log.Fatal(err)
+		fmt.Println("error Marshalling the JSON sent by the server")
 	}
 
 	r, err := http.NewRequest("POST", command_server+"/checkin", bytes.NewBuffer(json_data))
 	if err != nil {
-		panic(err)
+		fmt.Println("Error posting to command server")
+		return
 	}
 
 	// Add the header to say that it's json
@@ -153,7 +157,8 @@ func checkIn() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error sending data back to command server")
+		return
 	}
 
 	//shrug
