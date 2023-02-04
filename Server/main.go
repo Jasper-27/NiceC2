@@ -59,9 +59,44 @@ func handleRequests() {
 
 	http.HandleFunc("/checkin", nodeCheckIn)
 	http.HandleFunc("/node_response", node_response)
+	http.HandleFunc("/creat_task", creat_task_API)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+type task_create_request struct {
+	NodeID  string `json:"NodeID"`
+	Task    string `json:"Task"`
+	Details string `json:"Details"`
+	Key     string `json:"Key"`
+}
+
+func creat_task_API(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("New task has been recieved!")
+
+	fmt.Println(req.Body)
+
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	var task_create_request task_create_request
+
+	err := decoder.Decode(&task_create_request)
+	if err != nil {
+
+		fmt.Println("There was an error decoding the JSON in the task response")
+		panic(err)
+	}
+
+	fmt.Println(task_create_request)
+
+	// Now we have the result.
+
 }
 
 // Function for that runs each time the node checks in
