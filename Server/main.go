@@ -37,13 +37,13 @@ var task_queue []Task
 func main() {
 
 	// Make some hard coded tasks
-	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
+	// task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
 
 	fmt.Println("The current task queue")
 	fmt.Println(task_queue)
@@ -59,7 +59,7 @@ func handleRequests() {
 
 	http.HandleFunc("/checkin", nodeCheckIn)
 	http.HandleFunc("/node_response", node_response)
-	http.HandleFunc("/creat_task", creat_task_API)
+	http.HandleFunc("/create_task", create_task_API)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
@@ -72,7 +72,7 @@ type task_create_request struct {
 	Key     string `json:"Key"`
 }
 
-func creat_task_API(w http.ResponseWriter, req *http.Request) {
+func create_task_API(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("New task has been recieved!")
 
@@ -96,6 +96,12 @@ func creat_task_API(w http.ResponseWriter, req *http.Request) {
 	fmt.Println(task_create_request)
 
 	// Now we have the result.
+
+	fmt.Println("🤔")
+
+	task_queue = append(task_queue, create_task(task_create_request.NodeID, task_create_request.Task, task_create_request.Details))
+
+	fmt.Println("API task has now been added to queue")
 
 }
 
