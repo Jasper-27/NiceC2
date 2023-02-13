@@ -85,14 +85,7 @@ func get_nodes(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println(json_nodes)
 
-	// _, err2 := f.WriteString(response_to_task.Result + "\n")
-
-	// if err2 != nil {
-	// 	log.Fatal(err2)
-	// }
-
 	json, _ := json.Marshal(nodes)
-	// _, err2 := f.WriteString(string(json) + "\n")
 
 	fmt.Fprintf(w, string(json))
 
@@ -133,6 +126,13 @@ func create_task_API(w http.ResponseWriter, req *http.Request) {
 	fmt.Println(task_create_request)
 
 	// Now we have the result.
+
+	// correct for if a hostname is passed to the system
+	for _, node := range nodes {
+		if node.Hostname == task_create_request.NodeID {
+			task_create_request.NodeID = node.ID
+		}
+	}
 
 	fmt.Println("🤔")
 

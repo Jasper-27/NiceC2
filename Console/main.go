@@ -29,7 +29,12 @@ type node struct {
 
 var nodes []node
 
+// Points to local host. because network security is hard.
+var command_server string = "https://localhost:8081"
+
 func main() {
+
+	create_task_by_ID("Jasper's Air", "run command", "touch sent_from_hostname", "2")
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Welcome to NICE C2")
@@ -43,6 +48,7 @@ func main() {
 
 		if strings.Compare("help", text) == 0 {
 			fmt.Println("ls 	- List all nodes")
+			fmt.Println("Exit 	- Exit the NiceC2 interface")
 		}
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
@@ -53,9 +59,15 @@ func main() {
 			display_nodes()
 		}
 
+		// This doesn't work. and I have no idea why
+		if strings.HasPrefix("Hello", text) {
+			fmt.Println("Has the prefix Hello")
+		}
+
 	}
 
 }
+
 func display_nodes() {
 	get_nodes()
 
@@ -101,15 +113,13 @@ func get_nodes() {
 
 }
 
-var command_server string = "https://localhost:8081"
-
-func create_task(node string, task string, arg string, key string) {
+func create_task_by_ID(nodeID string, task string, arg string, key string) {
 
 	// This allows us to use a self signed certificate.
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	var task_create_request = `{
-    "NodeID": "` + node + `",
+    "NodeID": "` + nodeID + `",
     "Task": "` + task + `",
     "Details": "` + arg + `",
     "Key": "2"
