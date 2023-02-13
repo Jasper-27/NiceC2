@@ -60,9 +60,46 @@ func handleRequests() {
 	http.HandleFunc("/checkin", nodeCheckIn)
 	http.HandleFunc("/node_response", node_response)
 	http.HandleFunc("/create_task", create_task_API)
+	http.HandleFunc("/get_nodes", get_nodes)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+func get_nodes(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("New node list requested")
+
+	fmt.Println(req.Body)
+
+	// Decode te JSON
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	json_nodes, err := sliceToJSON(nodes)
+	if err != nil {
+		fmt.Println("Error converting nodes slice, to json string")
+	}
+
+	fmt.Println(json_nodes)
+
+	// _, err2 := f.WriteString(response_to_task.Result + "\n")
+
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+
+	json, _ := json.Marshal(nodes)
+	// _, err2 := f.WriteString(string(json) + "\n")
+
+	fmt.Fprintf(w, string(json))
+
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+
 }
 
 type task_create_request struct {
@@ -270,4 +307,16 @@ func read_script(path string) string {
 
 	return encoded_script
 
+}
+
+// sliceToJSON converts a slice of structs to a JSON string
+func sliceToJSON(slice interface{}) (string, error) {
+	// Marshal the slice of structs into a JSON string
+	jsonBytes, err := json.Marshal(slice)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a string and return it
+	return string(jsonBytes), nil
 }

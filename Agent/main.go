@@ -84,12 +84,8 @@ func main() {
 	// Checks in every 10 seconds.
 	for {
 		time.Sleep(5 * time.Second)
-
 		checkIn()
-
 	}
-
-	// checkIn()
 
 }
 

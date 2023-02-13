@@ -1,10 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"os"
+	"strings"
 )
 
 type Task struct {
@@ -13,10 +19,85 @@ type Task struct {
 	Content string
 }
 
-func main() {
-	fmt.Println("Welcome to the NiceC2 management interface: ")
+type node struct {
+	ID             string
+	Hostname       string
+	Platform       string
+	First_Check_In string
+	Last_Check_In  string
+}
 
-	create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch sent-from-api-and-func", "2")
+var nodes []node
+
+func main() {
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Welcome to NICE C2")
+	fmt.Println("---------------------")
+
+	for {
+		fmt.Print("-> ")
+		text, _ := reader.ReadString('\n')
+		// convert CRLF to LF
+		text = strings.Replace(text, "\n", "", -1)
+
+		if strings.Compare("help", text) == 0 {
+			fmt.Println("ls 	- List all nodes")
+		}
+		if strings.Compare("exit", text) == 0 {
+			fmt.Println("Goodbye!")
+			return
+		}
+
+		if strings.Compare("ls", text) == 0 {
+			display_nodes()
+		}
+
+	}
+
+}
+func display_nodes() {
+	get_nodes()
+
+	// Displays the nodes in a sort of table thing. needs to be done better
+	for _, node := range nodes {
+		fmt.Println("ID : ", node.ID, "	| Hostname: ", node.Hostname, "	 | Platform: ", node.Platform)
+	}
+}
+func get_nodes() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/get_nodes", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending the commands response back")
+		return
+	}
+
+	// fmt.Println(res.Body)
+
+	API_response, err := io.ReadAll(res.Body)
+	// b, err := ioutil.ReadAll(resp.Body)  Go.1.15 and earlier
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	API_response_string := string(API_response)
+
+	// Read the json string, and set the big array of nodes to it
+	json.Unmarshal([]byte(API_response_string), &nodes)
 
 }
 
@@ -28,13 +109,13 @@ func create_task(node string, task string, arg string, key string) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	var task_create_request = `{
-    "NodeID": "FCB85CB9-9452-539B-9988-48A4C5E3DFD3",
-    "Task": "run command",
-    "Details": "touch sent-from-api-3",
+    "NodeID": "` + node + `",
+    "Task": "` + task + `",
+    "Details": "` + arg + `",
     "Key": "2"
 }`
 
-	r, err := http.NewRequest("POST", command_server+"/create_task", bytes.NewBuffer([]byte(task_create_request)))
+	r, err := http.NewRequest("", command_server+"/create_task", bytes.NewBuffer([]byte(task_create_request)))
 	if err != nil {
 		// panic(err)
 		fmt.Println("Error sending the commands response back")
