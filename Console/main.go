@@ -59,12 +59,38 @@ func main() {
 			display_nodes()
 		}
 
-		// This doesn't work. and I have no idea why
-		if strings.HasPrefix("Hello", text) {
-			fmt.Println("Has the prefix Hello")
+		if strings.HasPrefix(text, "run") {
+			fmt.Println("oooh look it works")
+
+			// remove the run
+
+			// split_text := strings.Split(text, " ")
+
+			node := text[4:]
+
+			handle_run(node)
+
 		}
 
 	}
+
+}
+
+func handle_run(node string) {
+
+	// split_args := strings.Split(args, " ")
+
+	// node := split_args[1]
+
+	var command string
+
+	fmt.Print("Enter command here: ")
+	sub_reader := bufio.NewReader(os.Stdin)
+	command, _ = sub_reader.ReadString('\n')
+	// convert CRLF to LF
+	command = strings.Replace(command, "\n", "", -1)
+
+	create_task_by_ID(node, "run command", command, "2")
 
 }
 
