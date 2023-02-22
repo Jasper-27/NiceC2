@@ -7,7 +7,7 @@ type Task struct {
 	Action   string
 	Content  string
 	Progress string
-	output   string
+	Result   string
 }
 
 // Send to server when node completes response

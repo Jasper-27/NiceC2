@@ -61,9 +61,32 @@ func handleRequests() {
 	http.HandleFunc("/node_response", node_response)
 	http.HandleFunc("/create_task", create_task_API)
 	http.HandleFunc("/get_nodes", get_nodes)
+	http.HandleFunc("/get_tasks", get_tasks)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+func get_tasks(w http.ResponseWriter, req *http.Request) {
+	// Decode te JSON
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	json_tasks, err := sliceToJSON(task_queue)
+	if err != nil {
+		fmt.Println("Error converting nodes slice, to json string")
+	}
+
+	fmt.Println("/////////////////////////////////////")
+
+	fmt.Println(json_tasks)
+	fmt.Println("/////////////////////////////////////")
+
+	// json, _ := json.Marshal(json_tasks)
+
+	fmt.Fprintf(w, json_tasks)
 }
 
 func get_nodes(w http.ResponseWriter, req *http.Request) {
@@ -136,9 +159,16 @@ func create_task_API(w http.ResponseWriter, req *http.Request) {
 
 	fmt.Println("🤔")
 
-	task_queue = append(task_queue, create_task(task_create_request.NodeID, task_create_request.Task, task_create_request.Details))
+	var new_task = create_task(task_create_request.NodeID, task_create_request.Task, task_create_request.Details)
+
+	task_queue = append(task_queue, new_task)
+
+	var response = string(`{"taskID" : "` + new_task.TaskID + `"}`)
 
 	fmt.Println("API task has now been added to queue")
+
+	// Send the response back
+	fmt.Fprintf(w, response)
 
 }
 
@@ -244,24 +274,24 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	task_queue[task_location].Progress = response_to_task.Progress
 
-	fmt.Println(response_to_task.Result)
-
 	// Write result to file. Temporary measure
 	f, err := os.Create(response_to_task.TaskID + ".txt")
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer f.Close()
-
 	_, err2 := f.WriteString(response_to_task.Result + "\n")
-
 	if err2 != nil {
 		log.Fatal(err2)
 	}
+	f.Close()
 
-	fmt.Println("done")
+	// add the result to the task array
+	task_queue[task_location].Result = response_to_task.Result
+
+	fmt.Println("NODE RESPONSE RECORDED!")
+
+	fmt.Println(task_queue[task_location])
 
 	fmt.Println()
 
