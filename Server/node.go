@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 ////////////////////////////////////
 /// Node slice  			    ////
@@ -65,4 +68,9 @@ func display_all_nodes() {
 		fmt.Println("Last Seen:     " + value.Last_Check_In)
 		fmt.Println("------------------ ===== ------------------")
 	}
+}
+
+func return_nodes_json() string {
+	json, _ := json.Marshal(nodes)
+	return (string(json))
 }

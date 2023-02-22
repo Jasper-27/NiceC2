@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -37,13 +36,13 @@ var task_queue []Task
 func main() {
 
 	// Make some hard coded tasks
-	task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
-	task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
+	// task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
+	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
 
 	fmt.Println("The current task queue")
 	fmt.Println(task_queue)
@@ -59,9 +58,117 @@ func handleRequests() {
 
 	http.HandleFunc("/checkin", nodeCheckIn)
 	http.HandleFunc("/node_response", node_response)
+	http.HandleFunc("/create_task", create_task_API)
+	http.HandleFunc("/get_nodes", get_nodes)
+	http.HandleFunc("/get_tasks", get_tasks)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+func get_tasks(w http.ResponseWriter, req *http.Request) {
+	// Decode te JSON
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	json_tasks, err := sliceToJSON(task_queue)
+	if err != nil {
+		fmt.Println("Error converting nodes slice, to json string")
+	}
+
+	fmt.Println("/////////////////////////////////////")
+
+	fmt.Println(json_tasks)
+	fmt.Println("/////////////////////////////////////")
+
+	// json, _ := json.Marshal(json_tasks)
+
+	fmt.Fprintf(w, json_tasks)
+}
+
+func get_nodes(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("New node list requested")
+
+	fmt.Println(req.Body)
+
+	// Decode te JSON
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	json_nodes, err := sliceToJSON(nodes)
+	if err != nil {
+		fmt.Println("Error converting nodes slice, to json string")
+	}
+
+	fmt.Println(json_nodes)
+
+	json, _ := json.Marshal(nodes)
+
+	fmt.Fprintf(w, string(json))
+
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+
+}
+
+type task_create_request struct {
+	NodeID  string `json:"NodeID"`
+	Task    string `json:"Task"`
+	Details string `json:"Details"`
+	Key     string `json:"Key"`
+}
+
+func create_task_API(w http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("New task has been recieved!")
+
+	fmt.Println(req.Body)
+
+	// Decode the json body
+	decoder := json.NewDecoder(req.Body)
+
+	fmt.Println(decoder)
+	fmt.Println(req.Body)
+
+	var task_create_request task_create_request
+
+	err := decoder.Decode(&task_create_request)
+	if err != nil {
+
+		fmt.Println("There was an error decoding the JSON in the task response")
+		panic(err)
+	}
+
+	fmt.Println(task_create_request)
+
+	// Now we have the result.
+
+	// correct for if a hostname is passed to the system
+	for _, node := range nodes {
+		if node.Hostname == task_create_request.NodeID {
+			task_create_request.NodeID = node.ID
+		}
+	}
+
+	fmt.Println("🤔")
+
+	var new_task = create_task(task_create_request.NodeID, task_create_request.Task, task_create_request.Details)
+
+	task_queue = append(task_queue, new_task)
+
+	var response = string(`{"taskID" : "` + new_task.TaskID + `"}`)
+
+	fmt.Println("API task has now been added to queue")
+
+	// Send the response back
+	fmt.Fprintf(w, response)
+
 }
 
 // Function for that runs each time the node checks in
@@ -166,24 +273,24 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	task_queue[task_location].Progress = response_to_task.Progress
 
-	fmt.Println(response_to_task.Result)
+	// // Write result to file. Temporary measure
+	// f, err := os.Create(response_to_task.TaskID + ".txt")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer f.Close()
+	// _, err2 := f.WriteString(response_to_task.Result + "\n")
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+	// f.Close()
 
-	// Write result to file. Temporary measure
-	f, err := os.Create(response_to_task.TaskID + ".txt")
+	// add the result to the task array
+	task_queue[task_location].Result = response_to_task.Result
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("NODE RESPONSE RECORDED!")
 
-	defer f.Close()
-
-	_, err2 := f.WriteString(response_to_task.Result + "\n")
-
-	if err2 != nil {
-		log.Fatal(err2)
-	}
-
-	fmt.Println("done")
+	fmt.Println(task_queue[task_location])
 
 	fmt.Println()
 
@@ -229,4 +336,16 @@ func read_script(path string) string {
 
 	return encoded_script
 
+}
+
+// sliceToJSON converts a slice of structs to a JSON string
+func sliceToJSON(slice interface{}) (string, error) {
+	// Marshal the slice of structs into a JSON string
+	jsonBytes, err := json.Marshal(slice)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert the JSON bytes to a string and return it
+	return string(jsonBytes), nil
 }

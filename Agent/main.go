@@ -79,17 +79,13 @@ func main() {
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
-	// NodeID = "THis is a test 99"
+	// NodeID = "test"
 
 	// Checks in every 10 seconds.
 	for {
 		time.Sleep(5 * time.Second)
-
 		checkIn()
-
 	}
-
-	// checkIn()
 
 }
 
@@ -205,7 +201,7 @@ func checkIn() {
 
 func shutdown() {
 
-	fmt.Println("Beep Boop. The computer should now shut down")
+	fmt.Println("Beep Boop. This feature isn't implemented yet")
 
 	/// This is where the code to shutdown the PC will go
 }
