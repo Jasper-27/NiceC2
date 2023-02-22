@@ -79,7 +79,7 @@ func main() {
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
-	// NodeID = "THis is a test 99"
+	// NodeID = "test"
 
 	// Checks in every 10 seconds.
 	for {

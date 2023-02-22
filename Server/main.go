@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -274,17 +273,17 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	task_queue[task_location].Progress = response_to_task.Progress
 
-	// Write result to file. Temporary measure
-	f, err := os.Create(response_to_task.TaskID + ".txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	_, err2 := f.WriteString(response_to_task.Result + "\n")
-	if err2 != nil {
-		log.Fatal(err2)
-	}
-	f.Close()
+	// // Write result to file. Temporary measure
+	// f, err := os.Create(response_to_task.TaskID + ".txt")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer f.Close()
+	// _, err2 := f.WriteString(response_to_task.Result + "\n")
+	// if err2 != nil {
+	// 	log.Fatal(err2)
+	// }
+	// f.Close()
 
 	// add the result to the task array
 	task_queue[task_location].Result = response_to_task.Result

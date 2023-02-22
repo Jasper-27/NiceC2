@@ -47,8 +47,6 @@ var command_server string = "https://localhost:8081"
 
 func main() {
 
-	create_task_by_ID("Jasper's Air", "run command", "touch sent_from_hostname", "2")
-
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Welcome to NICE C2")
 	fmt.Println("---------------------")
@@ -60,8 +58,11 @@ func main() {
 		text = strings.Replace(text, "\n", "", -1)
 
 		if strings.Compare("help", text) == 0 {
-			fmt.Println("ls 	- List all nodes")
-			fmt.Println("Exit 	- Exit the NiceC2 interface")
+			fmt.Println("ls 			- List all nodes")
+			fmt.Println("tasks <node> 		- Display the tasks associated with a specific device. Leave blank to show all tasks")
+			fmt.Println("run <node> 		- Run a single command on a Node")
+			fmt.Println("Exit 			- Exit the NiceC2 interface")
+
 		}
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
@@ -70,19 +71,20 @@ func main() {
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
+
 		}
 
 		if strings.Compare("tasks", text) == 0 {
 			display_tasks()
+
+		} else if strings.HasPrefix(text, "tasks ") {
+
+			node := text[6:]
+			display_task_by_node(node)
+
 		}
 
 		if strings.HasPrefix(text, "run") {
-			fmt.Println("oooh look it works")
-
-			// remove the run
-
-			// split_text := strings.Split(text, " ")
-
 			node := text[4:]
 
 			handle_run(node)
@@ -118,6 +120,7 @@ func display_tasks() {
 
 	fmt.Println("Displaying tasks")
 	get_tasks()
+	fmt.Println("##############################################")
 
 	// // Displays the tasks in a sort of table thing. needs to be done better
 	for _, task := range tasks {
@@ -127,14 +130,12 @@ func display_tasks() {
 			fmt.Println(err)
 		}
 
-		fmt.Println(node_index)
-
 		// fmt.Println()
 		fmt.Println("TaskID: 	" + task.TaskID)
 		fmt.Println("Hostname: 	" + nodes[node_index].Hostname)
 		fmt.Println("Result:")
 		fmt.Println("----------")
-		fmt.Println("	" + task.Result)
+		fmt.Println(task.Result)
 		fmt.Println("##############################################")
 	}
 }
@@ -148,16 +149,58 @@ func Node_index_from_node_ID(nodeId string) (int, string) {
 	return 0, "Can't find Node"
 }
 
-func display_task_by_ID(TaskID string) {
+func NodeID_from_Hostname(input string) (string, string) {
+	for _, node := range nodes {
+		if input == node.Hostname {
+			return node.ID, ""
+		}
+	}
+
+	return "", ""
+}
+
+// Function to display the tasks assigned with the nodes. Takes either NodeID or Hostname as an argument
+func display_task_by_node(NodeID string) {
+
+	fmt.Println("Showing tasks for " + NodeID)
+
+	get_nodes()
 	get_tasks()
 
-	for _, task := range tasks {
-		// fmt.Println()
-		fmt.Println(task.NodeID)
+	// Support for both NodeID and Hostname
+	var found bool = false
+	for _, node := range nodes {
 
+		if node.ID == NodeID {
+			fmt.Println("Node ID detected")
+			found = true
+		}
+
+		if node.Hostname == NodeID {
+			fmt.Println("Hostname detected")
+			NodeID = node.ID
+			found = true
+		}
 	}
-	fmt.Println()
+	if found == false {
+		fmt.Println("No nodes found")
+	}
 
+	// output the task details
+	for _, task := range tasks {
+		if task.NodeID == NodeID {
+			fmt.Println("######################################")
+			fmt.Println("Task ID:		" + task.TaskID)
+			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
+			fmt.Println("Argument: 		" + task.Content)
+			fmt.Println("Progress: 		" + task.Progress)
+			fmt.Println("Result: ")
+			fmt.Println("----")
+			fmt.Println(task.Result)
+			fmt.Println("======================================")
+
+		}
+	}
 }
 
 func display_nodes() {
