@@ -10,7 +10,7 @@ func create_task(node string, task string, arg string) Task {
 	// Not sure why i need to convert here, but 🤷‍♀️
 	ID_string := strconv.Itoa(taskID)
 
-	newCommand := Task{ID_string, node, task, arg, "waiting"}
+	newCommand := Task{ID_string, node, task, arg, "waiting", ""}
 
 	return newCommand
 
