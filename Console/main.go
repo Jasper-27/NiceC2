@@ -13,12 +13,19 @@ import (
 	"strings"
 )
 
-type Task struct {
+type New_Task struct {
 	NodeID  string
 	Action  string
 	Content string
 }
-
+type Task struct {
+	TaskID   string
+	NodeID   string
+	Action   string
+	Content  string
+	Progress string
+	Result   string
+}
 type node struct {
 	ID             string
 	Hostname       string
@@ -27,7 +34,13 @@ type node struct {
 	Last_Check_In  string
 }
 
+type Task_Response_Response struct {
+	TaskID string
+}
+
 var nodes []node
+
+var tasks []Task
 
 // Points to local host. because network security is hard.
 var command_server string = "https://localhost:8081"
@@ -57,6 +70,10 @@ func main() {
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
+		}
+
+		if strings.Compare("tasks", text) == 0 {
+			display_tasks()
 		}
 
 		if strings.HasPrefix(text, "run") {
@@ -91,6 +108,55 @@ func handle_run(node string) {
 	command = strings.Replace(command, "\n", "", -1)
 
 	create_task_by_ID(node, "run command", command, "2")
+
+}
+
+func display_tasks() {
+
+	// need to have an up to date node list
+	get_nodes()
+
+	fmt.Println("Displaying tasks")
+	get_tasks()
+
+	// // Displays the tasks in a sort of table thing. needs to be done better
+	for _, task := range tasks {
+
+		node_index, err := Node_index_from_node_ID(task.NodeID)
+		if err != "" {
+			fmt.Println(err)
+		}
+
+		fmt.Println(node_index)
+
+		// fmt.Println()
+		fmt.Println("TaskID: 	" + task.TaskID)
+		fmt.Println("Hostname: 	" + nodes[node_index].Hostname)
+		fmt.Println("Result:")
+		fmt.Println("----------")
+		fmt.Println("	" + task.Result)
+		fmt.Println("##############################################")
+	}
+}
+
+func Node_index_from_node_ID(nodeId string) (int, string) {
+	for index, node := range nodes {
+		if nodeId == node.ID {
+			return index, ""
+		}
+	}
+	return 0, "Can't find Node"
+}
+
+func display_task_by_ID(TaskID string) {
+	get_tasks()
+
+	for _, task := range tasks {
+		// fmt.Println()
+		fmt.Println(task.NodeID)
+
+	}
+	fmt.Println()
 
 }
 
@@ -168,6 +234,51 @@ func create_task_by_ID(nodeID string, task string, arg string, key string) {
 		fmt.Println("Error sending the commands response back")
 	}
 
-	fmt.Println(res.Body)
+	// Decode the json body
+	decoder := json.NewDecoder(res.Body)
+	var response Task_Response_Response
+	err2 := decoder.Decode(&response)
+	if err2 != nil {
+		panic(err2)
+	}
+
+	fmt.Println("Task submitted.  	TaskID: " + response.TaskID)
+
+}
+
+func get_tasks() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/get_tasks", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending the commands response back")
+		return
+	}
+
+	// Read the response
+	API_response, err2 := io.ReadAll(res.Body)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	API_response_string := string(API_response)
+
+	// Unmarshal the response into the tasks array
+	err3 := json.Unmarshal([]byte(API_response_string), &tasks)
+	if err3 != nil {
+		fmt.Println(err2)
+	}
 
 }
