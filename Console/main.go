@@ -109,6 +109,10 @@ func shutdown(node string) {
 	task_id := create_task_by_ID(node, "shutdown", "", "2")
 
 	fmt.Println("Shutdown Task created (" + task_id + ")")
+
+	time.Sleep(5 * time.Second)
+
+	get_task_by_id(task_id)
 }
 
 func handle_run(node string) {
