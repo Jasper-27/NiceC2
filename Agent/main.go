@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -83,7 +84,7 @@ func main() {
 
 	// Checks in every 10 seconds.
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		checkIn()
 	}
 
@@ -199,11 +200,43 @@ func checkIn() {
 
 }
 
-func shutdown() {
+// func shutdown() {
 
-	fmt.Println("Beep Boop. This feature isn't implemented yet")
+// 	// fmt.Println("Beep Boop. This feature isn't implemented yet")
 
-	/// This is where the code to shutdown the PC will go
+// 	// platform := runtime.GOOS
+
+// 	// fmt.Println(platform)
+
+// 	// if platform == "darwin" {
+
+// 	// 	fmt.Println("The platform is darwin")
+
+// 	// 	runCommand("shutdown")
+// 	// }
+
+// 	// if err := exec.Command("cmd", "/C", "shutdown", "/s").Run(); err != nil {
+//     // 	fmt.Println("Failed to initiate shutdown:", err)
+// 	// }
+
+// 	// /// This is where the code to shutdown the PC will go
+// }
+
+// Function for shutting down PC
+func shutdown() error {
+	switch os := runtime.GOOS; os {
+	case "linux":
+		cmd := exec.Command("shutdown", "-h", "now")
+		return cmd.Run()
+	case "darwin":
+		cmd := exec.Command("shutdown", "-h", "now")
+		return cmd.Run()
+	case "windows":
+		cmd := exec.Command("shutdown", "/s", "/t", "0")
+		return cmd.Run()
+	default:
+		return errors.New("Shutdown failed: Can't find platform")
+	}
 }
 
 func getFIle() {

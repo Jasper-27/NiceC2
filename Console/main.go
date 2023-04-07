@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 type New_Task struct {
@@ -61,6 +62,7 @@ func main() {
 			fmt.Println("ls 			- List all nodes")
 			fmt.Println("tasks <node> 		- Display the tasks associated with a specific device. Leave blank to show all tasks")
 			fmt.Println("run <node> 		- Run a single command on a Node")
+			fmt.Println("shutdown <node> 	- shutdown device")
 			fmt.Println("Exit 			- Exit the NiceC2 interface")
 
 		}
@@ -91,8 +93,22 @@ func main() {
 
 		}
 
+		if strings.HasPrefix(text, "shutdown") {
+			node := text[9:]
+
+			shutdown(node)
+
+		}
+
 	}
 
+}
+
+func shutdown(node string) {
+
+	task_id := create_task_by_ID(node, "shutdown", "", "2")
+
+	fmt.Println("Shutdown Task created (" + task_id + ")")
 }
 
 func handle_run(node string) {
@@ -109,7 +125,14 @@ func handle_run(node string) {
 	// convert CRLF to LF
 	command = strings.Replace(command, "\n", "", -1)
 
-	create_task_by_ID(node, "run command", command, "2")
+	task_id := create_task_by_ID(node, "run command", command, "2")
+
+	fmt.Println("Waiting for command")
+
+	// Waiting three seconds for command to complete
+	time.Sleep(3 * time.Second)
+
+	get_task_by_id(task_id)
 
 }
 
@@ -248,7 +271,7 @@ func get_nodes() {
 
 }
 
-func create_task_by_ID(nodeID string, task string, arg string, key string) {
+func create_task_by_ID(nodeID string, task string, arg string, key string) string {
 
 	// This allows us to use a self signed certificate.
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
@@ -286,6 +309,30 @@ func create_task_by_ID(nodeID string, task string, arg string, key string) {
 	}
 
 	fmt.Println("Task submitted.  	TaskID: " + response.TaskID)
+
+	return response.TaskID
+
+}
+
+func get_task_by_id(input string) {
+
+	get_tasks()
+
+	// // Displays the tasks in a sort of table thing. needs to be done better
+	for _, task := range tasks {
+		if task.TaskID == input {
+			fmt.Println("######################################")
+			fmt.Println("Task ID:		" + task.TaskID)
+			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
+			fmt.Println("Argument: 		" + task.Content)
+			fmt.Println("Progress: 		" + task.Progress)
+			fmt.Println("Result: ")
+			fmt.Println("----")
+			fmt.Println(task.Result)
+			fmt.Println("======================================")
+
+		}
+	}
 
 }
 
