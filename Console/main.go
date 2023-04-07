@@ -109,24 +109,16 @@ func main() {
 }
 
 func shutdown(node string) {
-
 	task_id := create_task_by_ID(node, "shutdown", "", "2")
-
 	fmt.Println("Shutdown Task created (" + task_id + ")")
-
-	time.Sleep(5 * time.Second)
-
+	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
 }
 
 func reboot(node string) {
-
 	task_id := create_task_by_ID(node, "reboot", "", "2")
-
 	fmt.Println("Reboot Task created (" + task_id + ")")
-
-	time.Sleep(5 * time.Second)
-
+	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
 }
 
