@@ -63,6 +63,7 @@ func main() {
 			fmt.Println("tasks <node> 		- Display the tasks associated with a specific device. Leave blank to show all tasks")
 			fmt.Println("run <node> 		- Run a single command on a Node")
 			fmt.Println("shutdown <node> 	- shutdown device")
+			fmt.Println("reboot <node>		- reboot")
 			fmt.Println("Exit 			- Exit the NiceC2 interface")
 
 		}
@@ -95,9 +96,12 @@ func main() {
 
 		if strings.HasPrefix(text, "shutdown") {
 			node := text[9:]
-
 			shutdown(node)
+		}
 
+		if strings.HasPrefix(text, "reboot") {
+			node := text[7:]
+			reboot(node)
 		}
 
 	}
@@ -109,6 +113,17 @@ func shutdown(node string) {
 	task_id := create_task_by_ID(node, "shutdown", "", "2")
 
 	fmt.Println("Shutdown Task created (" + task_id + ")")
+
+	time.Sleep(5 * time.Second)
+
+	get_task_by_id(task_id)
+}
+
+func reboot(node string) {
+
+	task_id := create_task_by_ID(node, "reboot", "", "2")
+
+	fmt.Println("Reboot Task created (" + task_id + ")")
 
 	time.Sleep(5 * time.Second)
 

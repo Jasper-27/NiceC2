@@ -191,6 +191,8 @@ func checkIn() {
 		fmt.Println("Hello there")
 	case "shutdown":
 		shutdown(post.TaskID)
+	case "reboot":
+		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
 	default:
@@ -199,28 +201,6 @@ func checkIn() {
 	}
 
 }
-
-// func shutdown() {
-
-// 	// fmt.Println("Beep Boop. This feature isn't implemented yet")
-
-// 	// platform := runtime.GOOS
-
-// 	// fmt.Println(platform)
-
-// 	// if platform == "darwin" {
-
-// 	// 	fmt.Println("The platform is darwin")
-
-// 	// 	runCommand("shutdown")
-// 	// }
-
-// 	// if err := exec.Command("cmd", "/C", "shutdown", "/s").Run(); err != nil {
-//     // 	fmt.Println("Failed to initiate shutdown:", err)
-// 	// }
-
-// 	// /// This is where the code to shutdown the PC will go
-// }
 
 // Function for shutting down PC
 func shutdown(task_id string) error {
@@ -249,6 +229,47 @@ func shutdown(task_id string) error {
 	case "windows":
 		send_response(response)
 		out, err := exec.Command("shutdown", "/s", "/t", "0").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	default:
+		fmt.Println("shutdown failed")
+	}
+
+	response = Task_Response{task_id, "Failed", "Machine has not shutdown"}
+	send_response(response)
+	return errors.New("shutdown failed: Can't find platform")
+
+}
+
+func reboot(task_id string) error {
+
+	var response Task_Response
+
+	response = Task_Response{task_id, "Success", "Shutdown Command Received"}
+
+	switch os := runtime.GOOS; os {
+	case "linux":
+		send_response(response)
+		out, err := exec.Command("reboot").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "darwin":
+		send_response(response)
+		out, err := exec.Command("reboot").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "windows":
+		send_response(response)
+		out, err := exec.Command("shutdown", "/r", "/t", "0").Output()
 		if err != nil {
 			response = Task_Response{task_id, "Failed", string(out)}
 			send_response(response)
