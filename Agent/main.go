@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -83,7 +84,7 @@ func main() {
 
 	// Checks in every 10 seconds.
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		checkIn()
 	}
 
@@ -189,7 +190,9 @@ func checkIn() {
 	case "run script":
 		fmt.Println("Hello there")
 	case "shutdown":
-		shutdown()
+		shutdown(post.TaskID)
+	case "reboot":
+		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
 	default:
@@ -199,11 +202,87 @@ func checkIn() {
 
 }
 
-func shutdown() {
+// Function for shutting down PC
+func shutdown(task_id string) error {
 
-	fmt.Println("Beep Boop. This feature isn't implemented yet")
+	var response Task_Response
 
-	/// This is where the code to shutdown the PC will go
+	response = Task_Response{task_id, "Success", "Shutdown Command Received"}
+
+	switch os := runtime.GOOS; os {
+	case "linux":
+		send_response(response)
+		out, err := exec.Command("shutdown", "-h", "now").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "darwin":
+		send_response(response)
+		out, err := exec.Command("shutdown", "-h", "now").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "windows":
+		send_response(response)
+		out, err := exec.Command("shutdown", "/s", "/t", "0").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	default:
+		fmt.Println("shutdown failed")
+	}
+
+	response = Task_Response{task_id, "Failed", "Machine has not shutdown"}
+	send_response(response)
+	return errors.New("shutdown failed: Can't find platform")
+
+}
+
+func reboot(task_id string) error {
+
+	var response Task_Response
+
+	response = Task_Response{task_id, "Success", "Shutdown Command Received"}
+
+	switch os := runtime.GOOS; os {
+	case "linux":
+		send_response(response)
+		out, err := exec.Command("reboot").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "darwin":
+		send_response(response)
+		out, err := exec.Command("reboot").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	case "windows":
+		send_response(response)
+		out, err := exec.Command("shutdown", "/r", "/t", "0").Output()
+		if err != nil {
+			response = Task_Response{task_id, "Failed", string(out)}
+			send_response(response)
+			return err
+		}
+	default:
+		fmt.Println("shutdown failed")
+	}
+
+	response = Task_Response{task_id, "Failed", "Machine has not shutdown"}
+	send_response(response)
+	return errors.New("shutdown failed: Can't find platform")
+
 }
 
 func getFIle() {
