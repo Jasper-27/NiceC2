@@ -4,11 +4,9 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -63,41 +61,9 @@ func handleRequests() {
 	http.HandleFunc("/create_task", create_task_API)
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
-	http.HandleFunc("/download", downloadHandler)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
-}
-
-func downloadHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the file name from the request URL
-	filename := r.URL.Path[len("/download/"):]
-
-	// Check if the file exists
-	if _, err := os.Stat("payloads/" + filename); os.IsNotExist(err) {
-		http.NotFound(w, r)
-		return
-	}
-
-	// Open the file
-	file, err := os.Open("payloads/" + filename)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	// Set the response header
-	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
-	w.Header().Set("Content-Type", "application/octet-stream")
-	// w.Header().Set("Content-Length", fmt.Sprintf("%d", fileStat.Size()))
-
-	// Copy the file to the response writer
-	_, err = io.Copy(w, file)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 }
 
 func get_tasks(w http.ResponseWriter, req *http.Request) {
