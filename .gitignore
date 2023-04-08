@@ -7,3 +7,5 @@ Agent/payloads/shell.sh
 Server/nodes.json
 Server/server.key
 *.crt
+Learning/Download2/Client/Downloads/*
+Learning/Download2/Server/payloads/*
