@@ -4,7 +4,7 @@ Agent/agent
 *.DS_Store
 Agent/payloads/PowerShell.ps1
 Agent/payloads/shell.sh
-Server/nodes.json
+*/nodes.json
 *.key
 *.crt
 *.csr
