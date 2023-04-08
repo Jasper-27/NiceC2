@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -59,12 +60,13 @@ func main() {
 		text = strings.Replace(text, "\n", "", -1)
 
 		if strings.Compare("help", text) == 0 {
-			fmt.Println("ls 			- List all nodes")
-			fmt.Println("tasks <node> 		- Display the tasks associated with a specific device. Leave blank to show all tasks")
-			fmt.Println("run <node> 		- Run a single command on a Node")
-			fmt.Println("shutdown <node> 	- shutdown device")
-			fmt.Println("reboot <node>		- reboot")
-			fmt.Println("Exit 			- Exit the NiceC2 interface")
+			fmt.Println("ls\t\t\t\t\t\t\t- List all nodes")
+			fmt.Println("tasks <node>\t\t\t\t\t\t- Display the tasks associated with a specific device. Leave blank to show all tasks")
+			fmt.Println("run <node>\t\t\t\t\t\t- Run a single command on a Node")
+			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
+			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
+			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
+			fmt.Println("Download <node> -f <file> -d <destination path>\t\t- Upload file to the client.")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -104,7 +106,40 @@ func main() {
 			reboot(node)
 		}
 
+		if strings.HasPrefix(text, "download") {
+
+			processed_text := text[9:]
+
+			node, file, path, err := parse_download(processed_text)
+
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
+
+		}
+
 	}
+
+}
+
+func parse_download(input string) (string, string, string, error) {
+
+	// Split by -f first
+	parts1 := strings.Split(input, " -f ")
+	if len(parts1) != 2 {
+		return "", "", "", errors.New("Invalid input: -f needs to come first")
+	}
+
+	// Split the second part by -d
+	parts2 := strings.Split(parts1[1], " -d ")
+	if len(parts2) != 2 {
+		return "", "", "", errors.New("Invalid input: missing -d flag")
+	}
+
+	// deviceName / file / destination
+	return string(parts1[0]), string(parts2[0]), string(parts2[1]), nil
 
 }
 
