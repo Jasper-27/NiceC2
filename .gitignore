@@ -5,7 +5,8 @@ Agent/agent
 Agent/payloads/PowerShell.ps1
 Agent/payloads/shell.sh
 Server/nodes.json
-Server/server.key
+*.key
 *.crt
+*.csr
 Learning/Download2/Client/Downloads/*
 Learning/Download2/Server/payloads/*
