@@ -114,6 +114,7 @@ func main() {
 
 			if err != nil {
 				fmt.Println(err)
+				return
 			}
 
 			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
@@ -138,6 +139,7 @@ func parse_download(input string) (string, string, string, error) {
 	parts2 := strings.Split(parts1[1], " -d ")
 	if len(parts2) != 2 {
 		return "", "", "", errors.New("Invalid input: missing -d flag")
+
 	}
 
 	// deviceName / file / destination

