@@ -118,6 +118,8 @@ func main() {
 
 			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
 
+			download(node, file, path)
+
 		}
 
 	}

@@ -4,9 +4,11 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -61,6 +63,7 @@ func handleRequests() {
 	http.HandleFunc("/create_task", create_task_API)
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
+	http.HandleFunc("/download/", downloadHandler)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
@@ -319,6 +322,44 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 	// Sending the reponse
 	fmt.Fprintf(w, string(response))
 
+}
+
+func downloadHandler(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("🥲 Download request recieved")
+	// Get the file name from the request URL
+	filename := r.URL.Path[len("/download/"):]
+
+	// Check if the file exists
+	if _, err := os.Stat("payloads/" + filename); os.IsNotExist(err) {
+		http.NotFound(w, r)
+
+		fmt.Println("🚨 The file has not been found")
+		return
+	}
+
+	// Open the file
+	file, err := os.Open("payloads/" + filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println("🚨 The file can't be opened")
+
+		return
+	}
+	defer file.Close()
+
+	// Set the response header
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	// w.Header().Set("Content-Length", fmt.Sprintf("%d", fileStat.Size()))
+
+	fmt.Println("🙃 io.copy thing")
+	// Copy the file to the response writer
+	_, err = io.Copy(w, file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Reads and encodes a script. Read to send to the node

