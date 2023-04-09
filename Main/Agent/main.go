@@ -309,7 +309,7 @@ func handle_download(this_taskID string, args string) {
 	send_response(response)
 
 	// Download the file
-	err := downloadFile(filename, "Downloads/"+filename, this_taskID)
+	err := downloadFile(filename, destination, this_taskID)
 	if err != nil {
 		fmt.Println("Error downloading file:", err)
 		return
@@ -319,12 +319,13 @@ func handle_download(this_taskID string, args string) {
 
 func downloadFile(filename string, filepath string, this_taskID string) error {
 
-	// // This allows us to use a self signed certificate.
-	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
+
+		// Update the server on progress
+		response := Task_Response{this_taskID, "Failed", "Can't create file at: " + filepath}
+		send_response(response)
 		return err
 	}
 	defer out.Close()
@@ -376,7 +377,6 @@ func handle_runCommand(this_taskID string, command string) {
 		response = Task_Response{this_taskID, "failed", output}
 	} else {
 		response = Task_Response{this_taskID, "complete", output}
-
 	}
 
 	send_response(response)
