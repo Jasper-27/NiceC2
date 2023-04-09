@@ -10,3 +10,4 @@ Agent/payloads/shell.sh
 *.csr
 Learning/Download2/Client/Downloads/*
 Learning/Download2/Server/payloads/*
+Main/Server/payloads/*
