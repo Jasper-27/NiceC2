@@ -8,8 +8,8 @@ Agent/payloads/shell.sh
 *.key
 *.crt
 *.csr
-Learning/Download2/Client/Downloads/*
-Learning/Download2/Server/payloads/*
+Learning/Download/Client/Downloads/*
+Learning/Download/Server/payloads/*
 Main/Server/payloads/*
 main/Client/Downloads/*
 Main/Server/nodes.json
