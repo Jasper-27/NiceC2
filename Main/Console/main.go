@@ -151,7 +151,7 @@ func download(node string, file string, path string) {
 	data := file + " || " + path
 
 	task_id := create_task_by_ID(node, "download", data, "2")
-	fmt.Println("Shutdown Task created (" + task_id + ")")
+	fmt.Println("Download Task created (" + task_id + ")")
 	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
 
