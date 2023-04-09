@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 )
 
 func uploadFile(filepath string) error {
@@ -17,27 +18,39 @@ func uploadFile(filepath string) error {
 	}
 	defer file.Close()
 
-	body := &bytes.Buffer{}
+	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath)
+
+	filename := path.Base(filepath)
+
+	// Create a form field with the file name
+	part, err := writer.CreateFormFile("file", filename)
 	if err != nil {
 		return err
 	}
+
+	// Copy the file contents to the form field
 	_, err = io.Copy(part, file)
 	if err != nil {
 		return err
 	}
+
+	// Close the multipart writer
 	err = writer.Close()
 	if err != nil {
 		return err
 	}
 
+	// Create a new request with the multipart body
 	req, err := http.NewRequest("POST", "http://localhost:8083/upload", body)
 	if err != nil {
 		return err
 	}
+
+	// Set the Content-Type header to the multipart boundary
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
+	// Send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -57,7 +70,11 @@ func uploadFile(filepath string) error {
 }
 
 func main() {
-	err := uploadFile("testfile.txt")
+	filepath := "/Users/jasper/Desktop/uniLaptopBackground.png"
+
+	fmt.Println("Uploading file at path:", filepath)
+
+	err := uploadFile(filepath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

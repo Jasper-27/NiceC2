@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,40 +8,41 @@ import (
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the multipart form
+	err := r.ParseMultipartForm(32 << 20) // 32 MB limit
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(r.Header.Get("Content-Type"))
-
-	file, _, err := r.FormFile("file")
+	// Get the file from the form
+	file, handler, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
 
-	buf := new(bytes.Buffer)
-	_, err = buf.ReadFrom(file)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fmt.Printf("Received file with contents:\n%s\n", buf.String())
-
-	f, err := os.Create("uploaded-file")
+	// Create a new file on the server with the same name as the uploaded file
+	filepath := "./uploads/" + handler.Filename
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
 
-	_, err = io.Copy(f, buf)
+	// Write the file to disk
+	_, err = io.Copy(f, file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "File uploaded successfully!")
+	// Return a success message
+	fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
+
+	fmt.Println("File uploaded to path:", filepath)
 }
 
 func main() {
