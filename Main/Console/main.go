@@ -66,8 +66,8 @@ func main() {
 			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
 			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
 			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
-			fmt.Println("Download <node> -f <file> -d <destination path>\t\t- Download file to the client.")
-			fmt.Println("Upload <node> <filepath>\t\t- Upload file from the client.")
+			fmt.Println("get-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
+			fmt.Println("send-file <node> <filepath>\t\t- Upload file from the client.")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -106,9 +106,9 @@ func main() {
 			reboot(node)
 		}
 
-		if strings.HasPrefix(text, "download") {
+		if strings.HasPrefix(text, "send-file") {
 
-			processed_text := text[9:]
+			processed_text := text[10:]
 
 			node, file, path, err := parse_download(processed_text)
 
@@ -123,9 +123,9 @@ func main() {
 
 		}
 
-		if strings.HasPrefix(text, "upload") {
+		if strings.HasPrefix(text, "get-file") {
 
-			text := text[7:]
+			text := text[9:]
 
 			node, path, err := parse_upload(text)
 			if err != nil {
