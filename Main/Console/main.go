@@ -77,7 +77,6 @@ func main() {
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
-
 		}
 
 		if strings.Compare("tasks", text) == 0 {
@@ -130,11 +129,12 @@ func main() {
 
 			node, path, err := parse_upload(text)
 			if err != nil {
-				fmt.Println("Error parsing input")
-			}
+				fmt.Println(err)
 
-			upload(node, path)
-			// upload(text)
+			} else {
+				upload(node, path)
+				// upload(text)
+			}
 
 		}
 
@@ -146,7 +146,7 @@ func parse_upload(input string) (string, string, error) {
 	// Split by -f first
 	parts := strings.Split(input, " -p ")
 	if len(parts) != 2 {
-		return "", "", errors.New("Invalid input: -f needs to come first")
+		return "", "", errors.New("Invalid input: -p needs to come first")
 	}
 
 	return parts[0], parts[1], nil
@@ -207,10 +207,6 @@ func reboot(node string) {
 }
 
 func handle_run(node string) {
-
-	// split_args := strings.Split(args, " ")
-
-	// node := split_args[1]
 
 	var command string
 
