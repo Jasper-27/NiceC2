@@ -63,7 +63,7 @@ func handleRequests() {
 	http.HandleFunc("/create_task", create_task_API)
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
-	http.HandleFunc("/download/", downloadHandler)
+	http.HandleFunc("/send_file/", send_file_handler)
 	http.HandleFunc("/get_file", get_file_handler)
 	// http.HandleFunc("/getPayload", getPayload)
 
@@ -363,11 +363,10 @@ func get_file_handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("File moved to to path:", filepath)
 }
 
-func downloadHandler(w http.ResponseWriter, r *http.Request) {
+func send_file_handler(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("🥲 Download request recieved")
 	// Get the file name from the request URL
-	filename := r.URL.Path[len("/download/"):]
+	filename := r.URL.Path[len("/send_file/"):]
 
 	// Check if the file exists
 	if _, err := os.Stat("payloads/" + filename); os.IsNotExist(err) {
