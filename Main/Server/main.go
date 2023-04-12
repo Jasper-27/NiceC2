@@ -64,7 +64,7 @@ func handleRequests() {
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
 	http.HandleFunc("/download/", downloadHandler)
-	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/get_file", get_file_handler)
 	// http.HandleFunc("/getPayload", getPayload)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
@@ -325,7 +325,7 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
+func get_file_handler(w http.ResponseWriter, r *http.Request) {
 	// Parse the multipart form
 	err := r.ParseMultipartForm(32 << 20) // 32 MB limit
 	if err != nil {
@@ -358,9 +358,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return a success message
-	fmt.Fprintf(w, "File uploaded successfully: %s", handler.Filename)
+	fmt.Fprintf(w, "File retrieved successfully: %s", handler.Filename)
 
-	fmt.Println("File uploaded to path:", filepath)
+	fmt.Println("File moved to to path:", filepath)
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {

