@@ -49,18 +49,27 @@ var command_server string = "https://localhost:8081"
 
 func main() {
 
+	fmt.Println("Welcome to NICE C2")
+	fmt.Println("---------------------")
+
+	main_loop()
+}
+
+func main_loop() {
+
 	// Currently selected
 	var target string = ""
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Welcome to NICE C2")
-	fmt.Println("---------------------")
 
 	for {
 		fmt.Print("-> ")
 		text, _ := reader.ReadString('\n')
+
 		// convert CRLF to LF
 		text = strings.Replace(text, "\n", "", -1)
+
+		// fmt.Println("|" + text + "|")
 
 		if strings.Compare("help", text) == 0 {
 			fmt.Println("use <node> \t\t\t\t\t\t - Sets the node so it doens't have to be specified")
@@ -73,6 +82,8 @@ func main() {
 			fmt.Println("send-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
 			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
 			fmt.Println("payloads \t\t\t\t\t - Lists the available payloads")
+
+		}
 
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
@@ -87,11 +98,13 @@ func main() {
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
 		}
+
 		if strings.Compare("payloads", text) == 0 {
 			get_payloads_from_server()
 		}
 
 		if strings.HasPrefix(text, "tasks") {
+			fmt.Println("Getting tasks")
 			node := target
 			if len(strings.TrimSpace(text)) > 5 {
 				node = text[6:]
@@ -159,8 +172,8 @@ func main() {
 			}
 
 			if custom_target != "" {
-				fmt.Println("Downloading file " + file + " to " + destination + " on " + custom_target)
 
+				fmt.Println("Downloading file " + file + " to " + destination + " on " + custom_target)
 				send_file(custom_target, file, destination)
 			} else {
 				fmt.Println("Downloading file " + file + " to " + destination + " on " + target)
@@ -176,26 +189,32 @@ func main() {
 			var path string
 
 			split := strings.Split(text, "-p ")
-			if len(split) == 2 {
+			// if len(split) == 2 {
 
-				fmt.Println("The length of the split is 2")
+			// 	fmt.Println("The length of the split is 2")
 
-				fmt.Println("Split 0~" + split[0] + "~")
-				fmt.Println("Split 1~" + split[1] + "~")
-			} else {
-				fmt.Println("The split hasn't worked properly")
-			}
+			// 	fmt.Println("Split 0~" + split[0] + "~")
+			// 	fmt.Println("Split 1~" + split[1] + "~")
+			// } else {
+			// 	fmt.Println("The split hasn't worked properly")
+			// }
 
 			if len(split[0]) > 1 {
 				node = strings.TrimSpace(split[0])
 			} else {
 				node = target
+				if len(node) < 1 {
+					// if there is no node. We should just start over.
+
+					fmt.Println("Can't find a target")
+					main_loop()
+				}
 			}
 
 			path = split[1]
 
-			fmt.Println("|" + node + "|")
-			fmt.Println("|" + path + "|")
+			// fmt.Println("|" + node + "|")
+			// fmt.Println("|" + path + "|")
 
 			get_file(node, path)
 
