@@ -63,7 +63,7 @@ func main_loop() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print("-> ")
+		fmt.Print("(" + target + ")-> ")
 		text, _ := reader.ReadString('\n')
 
 		// convert CRLF to LF
