@@ -67,6 +67,9 @@ func handleRequests() {
 	http.HandleFunc("/get_file", get_file_handler)
 	// http.HandleFunc("/getPayload", getPayload)
 
+	// Console endpoints
+	http.HandleFunc("/list_payloads", list_payloads)
+
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
 }
 
@@ -90,6 +93,29 @@ func get_tasks(w http.ResponseWriter, req *http.Request) {
 	// json, _ := json.Marshal(json_tasks)
 
 	fmt.Fprintf(w, json_tasks)
+}
+
+func list_payloads(w http.ResponseWriter, req *http.Request) {
+
+	files, err := ioutil.ReadDir("payloads/")
+	if err != nil {
+		// return nil, err
+
+		fmt.Println("Error reading payloads dir")
+		return
+	}
+	var fileNames []string
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name())
+	}
+
+	json_paylods, err := sliceToJSON(fileNames)
+	if err != nil {
+		fmt.Println("couldn't decode JSON slice")
+	}
+
+	fmt.Fprintf(w, json_paylods)
+
 }
 
 func get_nodes(w http.ResponseWriter, req *http.Request) {
@@ -241,7 +267,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, response)
 	}
 
-	fmt.Println(task_queue)
+	// fmt.Println(task_queue)
 
 	save_nodes_to_file()
 }

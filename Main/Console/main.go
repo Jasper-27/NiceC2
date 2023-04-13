@@ -68,6 +68,7 @@ func main() {
 			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
 			fmt.Println("send-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
 			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
+			fmt.Println("payloads \t\t\t\t\t - Lists the available payloads")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -77,6 +78,9 @@ func main() {
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
+		}
+		if strings.Compare("payloads", text) == 0 {
+			get_payloads_from_server()
 		}
 
 		if strings.Compare("tasks", text) == 0 {
@@ -461,5 +465,63 @@ func get_tasks() {
 	if err3 != nil {
 		fmt.Println(err2)
 	}
+
+}
+
+func get_payloads_from_server() {
+
+	// var payloads[]
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/list_payloads", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending the commands response back")
+		return
+	}
+
+	// Read the response
+	API_response, err2 := io.ReadAll(res.Body)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	API_response_string := string(API_response)
+
+	// // Unmarshal the response into the tasks array
+	// err3 := json.Unmarshal([]byte(API_response_string), &paylods)
+	// if err3 != nil {
+	// 	fmt.Println(err2)
+	// }
+
+	// Converting the string into a slice of filenames.
+	var slice []string
+	err3 := json.Unmarshal([]byte(API_response_string), &slice)
+	if err3 != nil {
+		panic(err)
+	}
+
+	// Making a nice output
+
+	fmt.Println()
+	fmt.Println("Payloads stored in ./payloads")
+	fmt.Println("#############################")
+	fmt.Println()
+	for _, item := range slice {
+		fmt.Println(item)
+	}
+
+	fmt.Println()
 
 }
