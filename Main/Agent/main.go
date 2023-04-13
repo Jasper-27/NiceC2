@@ -6,10 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"path"
 	"time"
 
 	// "io/ioutil"
-	b64 "encoding/base64"
+
 	"log"
 	"net/http"
 	"os"
@@ -22,8 +26,7 @@ import (
 )
 
 // Setting the command server
-// var command_server string = "http://192.168.0.69:8081"
-
+// var command_server string = "https://192.168.0.69:8081"
 var command_server string = "https://localhost:8081"
 
 // var command_server string = "http://192.168.0.29:8081"
@@ -68,13 +71,13 @@ var p = fmt.Println
 func main() {
 
 	Banner := `
-███████████████████████████████████████████████████████████████████████████████████████████████
-███    ██ ██  ██████ ███████  ██████ ██████       █████   ██████  ███████ ███    ██ ████████  
-████   ██ ██ ██      ██      ██           ██     ██   ██ ██       ██      ████   ██    ██    
-██ ██  ██ ██ ██      █████   ██       █████      ███████ ██   ███ █████   ██ ██  ██    ██    
-██  ██ ██ ██ ██      ██      ██      ██          ██   ██ ██    ██ ██      ██  ██ ██    ██    
-██   ████ ██  ██████ ███████  ██████ ███████     ██   ██  ██████  ███████ ██   ████    ██    
-███████████████████████████████████████████████████████████████████████████████████████████████                                                                                                                                                                                       
+█████████████████████████████████████████████
+   █████   ██████  ███████ ███    ██ ████████  
+  ██   ██ ██       ██      ████   ██    ██    
+  ███████ ██   ███ █████   ██ ██  ██    ██    
+  ██   ██ ██    ██ ██      ██  ██ ██    ██    
+  ██   ██  ██████  ███████ ██   ████    ██    
+█████████████████████████████████████████████                                                                                                                                                                            
 `
 
 	fmt.Println(Banner)
@@ -163,7 +166,7 @@ func checkIn() {
 
 	// Bit of UI for you
 	if res.StatusCode == 200 {
-		fmt.Println("Response was OK")
+		// fmt.Println("Response was OK")
 	} else {
 		fmt.Println("Response was Not OK")
 	}
@@ -175,15 +178,15 @@ func checkIn() {
 		panic(derr)
 	}
 
+	// Handeling it if there is no new task
+	if post.TaskID == "0" {
+		// fmt.Println("No new task")
+		return
+	}
+
 	fmt.Println("Details of response")
 	fmt.Println("Task: " + post.Task)
 	fmt.Println("Arg: " + post.Arg)
-
-	// Handeling it if there is no new task
-	if post.TaskID == "0" {
-		fmt.Println("No new task")
-		return
-	}
 
 	// This is is where the tasks that the node should then do need to go
 	switch post.Task {
@@ -195,6 +198,10 @@ func checkIn() {
 		reboot(post.TaskID)
 	case "run command":
 		go handle_runCommand(post.TaskID, post.Arg)
+	case "send-file":
+		go handle_send_file(post.TaskID, post.Arg)
+	case "get-file":
+		go get_file(post.TaskID, post.Arg)
 	default:
 		// Well if it doesn't match 🤷‍♀️
 
@@ -285,58 +292,181 @@ func reboot(task_id string) error {
 
 }
 
-func getFIle() {
+func handle_send_file(this_taskID string, args string) {
 
-	fmt.Println("\nStarting the getting file thing")
+	parts := strings.Split(args, " || ")
+	if len(parts) != 2 {
 
-	data := map[string]string{"ID": NodeID}
-
-	json_data, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal(err)
+		response := Task_Response{this_taskID, "Failed", "unable to parse arguments"}
+		send_response(response)
+		// return errors.New("cant parse download argument")
 	}
 
-	r, err := http.NewRequest("POST", command_server+"/old-payload", bytes.NewBuffer(json_data))
+	filename := parts[0]
+	destination := parts[1]
+
+	fmt.Println("Filename: " + filename)
+	fmt.Println("Destination: " + destination)
+
+	// Update the server on progress
+	response := Task_Response{this_taskID, "Progress", "Filename: " + filename}
+	send_response(response)
+
+	// Download the file
+	err := send_file(filename, destination, this_taskID)
 	if err != nil {
-		panic(err)
+
+		// response := Task_Response{this_taskID, "Failed", "Could not retrieve the file from the server."}
+		// send_response(response)
+		fmt.Println("Error retrieving file from server:", err)
+		return
 	}
 
-	// Add the header to say that it's json
-	r.Header.Add("Content-Type", "application/json")
+}
 
-	//Create a client to send the data and then send it
+func get_file(this_taskID string, filepath string) error {
+
+	if _, err := os.Stat(filepath); errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does not exist
+
+		response := Task_Response{this_taskID, "Failed", "Can't find the file"}
+		send_response(response)
+	}
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		return err
+		response := Task_Response{this_taskID, "Failed", "Can't open the file"}
+		send_response(response)
+
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	filename := path.Base(filepath)
+
+	// Create a form field with the file name
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		return err
+	}
+
+	// Copy the file contents to the form field
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return err
+	}
+
+	// Close the multipart writer
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+
+	// Create a new request with the multipart body
+	req, err := http.NewRequest("POST", command_server+"/get_file", body)
+	if err != nil {
+
+		fmt.Println("Can't creatr a new request")
+		response := Task_Response{this_taskID, "Failed", "Can't creat new request with the multipart body"}
+		send_response(response)
+
+		return err
+	}
+
+	// Set the Content-Type header to the multipart boundary
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	// Send the request
 	client := &http.Client{}
-	res, err := client.Do(r)
+	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+
+			// fmt.Println("failed to get-file file " + string(resp.StatusCode))
+			fmt.Println(resp.StatusCode)
+
+			response := Task_Response{this_taskID, "Failed", "failed to get file " + string(resp.StatusCode)}
+			send_response(response)
+			return fmt.Errorf("Failed to get file. Status code: %d", resp.StatusCode)
+
+		}
+
+		fmt.Println(resp.StatusCode)
+
+		response := Task_Response{this_taskID, "Failed", "failed to get file " + string(resp.StatusCode)}
+		send_response(response)
+		return fmt.Errorf("Failed to get file. Status code: %d. Response body: %s", resp.StatusCode, string(body))
 	}
 
-	//shrug
-	defer res.Body.Close()
+	response := Task_Response{this_taskID, "Success", "File retrieved"}
+	send_response(response)
 
-	fmt.Println(res.StatusCode)
+	return nil
+}
 
-	// Parse the JSON response
-	post := &command{}
+func send_file(filename string, filepath string, this_taskID string) error {
 
-	fmt.Println(1)
-	derr := json.NewDecoder(res.Body).Decode(post)
-	if derr != nil {
-		panic(derr)
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+
+		// Handles if the user doesn't specify the file name in the thingy
+		out, err = os.Create(filepath + filename)
+		if err != nil {
+			// Update the server on progress
+			response := Task_Response{this_taskID, "Failed", "Can't create file at: " + filepath}
+			send_response(response)
+			return err
+
+		}
+
+	}
+	defer out.Close()
+
+	// Make the request
+	resp, err := http.Get(command_server + "/send_file/" + filename)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check the status code
+	if resp.StatusCode != http.StatusOK {
+		os.Remove(filepath) // if the file isn't found. remove the empty destination
+		return fmt.Errorf("failed to send the file to node: %s", resp.Status)
 	}
 
-	// Decoding the body so it's readable
-	details, _ := b64.StdEncoding.DecodeString(post.Details)
-	fmt.Println(string(details))
+	// Write the body to file in chunks
+	buf := make([]byte, 1024*1024) // 1MB buffer
+	for {
+		n, err := resp.Body.Read(buf)
+		if err != nil && err != io.EOF {
+			return err
+		}
+		if n == 0 {
+			break
+		}
 
-	// Output the JSON response
-	fmt.Println("ID: ", post.ID)
-	fmt.Println("Command: ", post.Command)
-	fmt.Println("Details: ", string(details))
+		_, err = out.Write(buf[:n])
+		if err != nil {
+			return err
+		}
+	}
 
-	// Write the string to file
-	script_to_file(string(details))
+	// Update the server on progress
+	response := Task_Response{this_taskID, "Success!", "Filename: " + filename}
+	send_response(response)
 
+	return nil
 }
 
 // Runs a command based of a task. Then creates a response.
@@ -349,7 +479,6 @@ func handle_runCommand(this_taskID string, command string) {
 		response = Task_Response{this_taskID, "failed", output}
 	} else {
 		response = Task_Response{this_taskID, "complete", output}
-
 	}
 
 	send_response(response)

