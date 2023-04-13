@@ -316,8 +316,8 @@ func handle_send_file(this_taskID string, args string) {
 	err := send_file(filename, destination, this_taskID)
 	if err != nil {
 
-		response := Task_Response{this_taskID, "Failed", "Could not retrieve the file from the server."}
-		send_response(response)
+		// response := Task_Response{this_taskID, "Failed", "Could not retrieve the file from the server."}
+		// send_response(response)
 		fmt.Println("Error retrieving file from server:", err)
 		return
 	}
@@ -419,10 +419,16 @@ func send_file(filename string, filepath string, this_taskID string) error {
 	out, err := os.Create(filepath)
 	if err != nil {
 
-		// Update the server on progress
-		response := Task_Response{this_taskID, "Failed", "Can't create file at: " + filepath}
-		send_response(response)
-		return err
+		// Handles if the user doesn't specify the file name in the thingy
+		out, err = os.Create(filepath + filename)
+		if err != nil {
+			// Update the server on progress
+			response := Task_Response{this_taskID, "Failed", "Can't create file at: " + filepath}
+			send_response(response)
+			return err
+
+		}
+
 	}
 	defer out.Close()
 
