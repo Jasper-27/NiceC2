@@ -49,6 +49,9 @@ var command_server string = "https://localhost:8081"
 
 func main() {
 
+	// Currently selected
+	var target string = ""
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("Welcome to NICE C2")
 	fmt.Println("---------------------")
@@ -60,6 +63,7 @@ func main() {
 		text = strings.Replace(text, "\n", "", -1)
 
 		if strings.Compare("help", text) == 0 {
+			fmt.Println("use <node> \t\t\t\t\t\t - Sets the node so it doens't have to be specified")
 			fmt.Println("ls\t\t\t\t\t\t\t- List all nodes")
 			fmt.Println("tasks <node>\t\t\t\t\t\t- Display the tasks associated with a specific device. Leave blank to show all tasks")
 			fmt.Println("run <node>\t\t\t\t\t\t- Run a single command on a Node")
@@ -70,10 +74,14 @@ func main() {
 			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
 			fmt.Println("payloads \t\t\t\t\t - Lists the available payloads")
 
-		}
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
 			return
+		}
+
+		if strings.HasPrefix(text, "use ") {
+			target = text[4:]
+			fmt.Println("Now using node '" + target + "'")
 		}
 
 		if strings.Compare("ls", text) == 0 {
@@ -83,30 +91,35 @@ func main() {
 			get_payloads_from_server()
 		}
 
-		if strings.Compare("tasks", text) == 0 {
-			display_tasks()
-
-		} else if strings.HasPrefix(text, "tasks ") {
-
-			node := text[6:]
-			display_task_by_node(node)
-
+		if strings.HasPrefix(text, "tasks") {
+			node := target
+			if len(strings.TrimSpace(text)) > 5 {
+				node = text[6:]
+			}
+			display_tasks_by_node(node)
 		}
 
 		if strings.HasPrefix(text, "run") {
-			node := text[4:]
-
+			node := target
+			if len(strings.TrimSpace(text)) > 3 {
+				node = text[4:]
+			}
 			handle_run(node)
-
 		}
 
 		if strings.HasPrefix(text, "shutdown") {
-			node := text[9:]
+			node := target
+			if len(strings.TrimSpace(text)) > 8 {
+				node = text[9:]
+			}
 			shutdown(node)
 		}
 
 		if strings.HasPrefix(text, "reboot") {
-			node := text[7:]
+			node := target
+			if len(strings.TrimSpace(text)) > 6 {
+				node = text[7:]
+			}
 			reboot(node)
 		}
 
@@ -114,31 +127,77 @@ func main() {
 
 			processed_text := text[10:]
 
-			node, file, path, err := parse_send_file(processed_text)
+			var custom_target string = ""
+			var file string
+			var destination string
 
-			if err != nil {
-				fmt.Println(err)
-				return
+			split_1 := strings.Split(processed_text, "-f ")
+
+			// If not target is specified
+			if len(split_1) == 1 {
+
+				//
+				split_no_target := strings.Split(split_1[0], " -d ")
+				if len(split_no_target) != 2 {
+					fmt.Println("Error splitting")
+				}
+
+				file = split_no_target[0]
+				destination = split_no_target[1]
+
+			}
+			if len(split_1) == 2 {
+				split_2 := strings.Split(split_1[1], " -d ")
+				if len(split_2) != 2 {
+					fmt.Println("Error splitting")
+				}
+
+				custom_target = strings.TrimSpace(split_1[0]) // trim space is needed as splitting ads a space on the end
+				file = split_2[0]
+				destination = split_2[1]
+
 			}
 
-			fmt.Println("Downloading file " + file + " to " + path + " on " + node)
+			if custom_target != "" {
+				fmt.Println("Downloading file " + file + " to " + destination + " on " + custom_target)
 
-			send_file(node, file, path)
+				send_file(custom_target, file, destination)
+			} else {
+				fmt.Println("Downloading file " + file + " to " + destination + " on " + target)
+				send_file(target, file, destination)
+			}
 
 		}
 
 		if strings.HasPrefix(text, "get-file") {
-
 			text := text[9:]
 
-			node, path, err := parse_get_file(text)
-			if err != nil {
-				fmt.Println(err)
+			var node string
+			var path string
 
+			split := strings.Split(text, "-p ")
+			if len(split) == 2 {
+
+				fmt.Println("The length of the split is 2")
+
+				fmt.Println("Split 0~" + split[0] + "~")
+				fmt.Println("Split 1~" + split[1] + "~")
 			} else {
-				get_file(node, path)
-				// upload(text)
+				fmt.Println("The split hasn't worked properly")
 			}
+
+			if len(split[0]) > 1 {
+				node = strings.TrimSpace(split[0])
+			} else {
+				node = target
+			}
+
+			path = split[1]
+
+			fmt.Println("|" + node + "|")
+			fmt.Println("|" + path + "|")
+
+			get_file(node, path)
 
 		}
 
@@ -164,25 +223,27 @@ func get_file(node string, path string) {
 	get_task_by_id(task_id)
 }
 
-func parse_send_file(input string) (string, string, string, error) {
+// func parse_send_file(input string) (string, string, string, error) {
 
-	// Split by -f first
-	parts1 := strings.Split(input, " -f ")
-	if len(parts1) != 2 {
-		return "", "", "", errors.New("Invalid input: -f needs to come first")
-	}
+// 	// Split by -f first
+// 	parts1 := strings.Split(input, " -f ")
+// 	if len(parts1) != 2 {
+// 		return "", "", "", errors.New("Invalid input: -f needs to come first")
 
-	// Split the second part by -d
-	parts2 := strings.Split(parts1[1], " -d ")
-	if len(parts2) != 2 {
-		return "", "", "", errors.New("Invalid input: missing -d flag")
+// 		// fmt.Println("using target")
+// 	}
 
-	}
+// 	// Split the second part by -d
+// 	parts2 := strings.Split(parts1[1], " -d ")
+// 	if len(parts2) != 2 {
+// 		return "", "", "", errors.New("Invalid input: missing -d flag")
 
-	// deviceName / file / destination
-	return string(parts1[0]), string(parts2[0]), string(parts2[1]), nil
+// 	}
 
-}
+// 	// deviceName / file / destination
+// 	return string(parts1[0]), string(parts2[0]), string(parts2[1]), nil
+
+// }
 
 func send_file(node string, file string, path string) {
 
@@ -278,7 +339,7 @@ func NodeID_from_Hostname(input string) (string, string) {
 }
 
 // Function to display the tasks assigned with the nodes. Takes either NodeID or Hostname as an argument
-func display_task_by_node(NodeID string) {
+func display_tasks_by_node(NodeID string) {
 
 	fmt.Println("Showing tasks for " + NodeID)
 
