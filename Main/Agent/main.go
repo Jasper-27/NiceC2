@@ -538,43 +538,43 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 }
 
-// Converts an encoded script. To a script on the machine
-func script_to_file(input string) {
+// // Converts an encoded script. To a script on the machine
+// func script_to_file(input string) {
 
-	f, err := os.Create("payloads/shell.sh")
+// 	f, err := os.Create("payloads/shell.sh")
 
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	defer f.Close()
+// 	defer f.Close()
 
-	data := []byte(input)
+// 	data := []byte(input)
 
-	_, err2 := f.Write(data)
+// 	_, err2 := f.Write(data)
 
-	if err2 != nil {
-		log.Fatal(err2)
-	}
+// 	if err2 != nil {
+// 		log.Fatal(err2)
+// 	}
 
-	return
-}
+// 	return
+// }
 
-// Runs a script. Currently not OS agnostic
-func run_script(path_to_script string) (output string) {
+// // Runs a script. Currently not OS agnostic
+// func run_script(path_to_script string) (output string) {
 
-	output = ""
+// 	output = ""
 
-	out, err := exec.Command("sh", path_to_script).Output()
-	if err != nil {
-		fmt.Println("Error executing script")
-	}
+// 	out, err := exec.Command("sh", path_to_script).Output()
+// 	if err != nil {
+// 		fmt.Println("Error executing script")
+// 	}
 
-	output = string(out)
+// 	output = string(out)
 
-	return output
+// 	return output
 
-}
+// }
 
 // structToJSON converts a struct to a JSON string
 func structToJSON(v interface{}) (string, error) {

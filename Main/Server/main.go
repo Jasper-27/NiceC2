@@ -1,7 +1,6 @@
 package main
 
 import (
-	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -140,10 +139,6 @@ func get_nodes(w http.ResponseWriter, req *http.Request) {
 	json, _ := json.Marshal(nodes)
 
 	fmt.Fprintf(w, string(json))
-
-	// if err2 != nil {
-	// 	log.Fatal(err2)
-	// }
 
 }
 
@@ -303,18 +298,6 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	task_queue[task_location].Progress = response_to_task.Progress
 
-	// // Write result to file. Temporary measure
-	// f, err := os.Create(response_to_task.TaskID + ".txt")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer f.Close()
-	// _, err2 := f.WriteString(response_to_task.Result + "\n")
-	// if err2 != nil {
-	// 	log.Fatal(err2)
-	// }
-	// f.Close()
-
 	// add the result to the task array
 	task_queue[task_location].Result = response_to_task.Result
 
@@ -326,30 +309,30 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 }
 
-// Handles gathering a file for the node to recieve
-func nodeSendFile(w http.ResponseWriter, req *http.Request) {
+// // Handles gathering a file for the node to recieve
+// func nodeSendFile(w http.ResponseWriter, req *http.Request) {
 
-	// Decode the json body
-	decoder := json.NewDecoder(req.Body)
-	var node check_in
-	err := decoder.Decode(&node)
-	if err != nil {
-		panic(err)
-	}
+// 	// Decode the json body
+// 	decoder := json.NewDecoder(req.Body)
+// 	var node check_in
+// 	err := decoder.Decode(&node)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	script := read_script("payloads/shell.sh")
+// 	script := read_script("payloads/shell.sh")
 
-	var response = []byte(`
-	{
-		"ID": "` + node.ID + `",
-		"command": "File",
-		"details": "` + script + `"
-	}`)
+// 	var response = []byte(`
+// 	{
+// 		"ID": "` + node.ID + `",
+// 		"command": "File",
+// 		"details": "` + script + `"
+// 	}`)
 
-	// Sending the reponse
-	fmt.Fprintf(w, string(response))
+// 	// Sending the reponse
+// 	fmt.Fprintf(w, string(response))
 
-}
+// }
 
 func get_file_handler(w http.ResponseWriter, r *http.Request) {
 	// Parse the multipart form
@@ -426,22 +409,22 @@ func send_file_handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Reads and encodes a script. Read to send to the node
-func read_script(path string) string {
+// // Reads and encodes a script. Read to send to the node
+// func read_script(path string) string {
 
-	// Read the file
-	bFile, _ := ioutil.ReadFile(path)
-	script := string(bFile)
-	// script = strings.Replace(script, "\n", "", -1)
+// 	// Read the file
+// 	bFile, _ := ioutil.ReadFile(path)
+// 	script := string(bFile)
+// 	// script = strings.Replace(script, "\n", "", -1)
 
-	// fmt.Println(script)
+// 	// fmt.Println(script)
 
-	// here is where we turn the file into some nice data I think
-	encoded_script := b64.StdEncoding.EncodeToString([]byte(script))
+// 	// here is where we turn the file into some nice data I think
+// 	encoded_script := b64.StdEncoding.EncodeToString([]byte(script))
 
-	return encoded_script
+// 	return encoded_script
 
-}
+// }
 
 // sliceToJSON converts a slice of structs to a JSON string
 func sliceToJSON(slice interface{}) (string, error) {
