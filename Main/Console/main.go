@@ -242,28 +242,6 @@ func get_file(node string, path string) {
 	get_task_by_id(task_id)
 }
 
-// func parse_send_file(input string) (string, string, string, error) {
-
-// 	// Split by -f first
-// 	parts1 := strings.Split(input, " -f ")
-// 	if len(parts1) != 2 {
-// 		return "", "", "", errors.New("Invalid input: -f needs to come first")
-
-// 		// fmt.Println("using target")
-// 	}
-
-// 	// Split the second part by -d
-// 	parts2 := strings.Split(parts1[1], " -d ")
-// 	if len(parts2) != 2 {
-// 		return "", "", "", errors.New("Invalid input: missing -d flag")
-
-// 	}
-
-// 	// deviceName / file / destination
-// 	return string(parts1[0]), string(parts2[0]), string(parts2[1]), nil
-
-// }
-
 func send_file(node string, file string, path string) {
 
 	// Combining the data
@@ -302,7 +280,7 @@ func handle_run(node string) {
 
 	task_id := create_task_by_ID(node, "run command", command, "2")
 
-	fmt.Println("Waiting for command")
+	fmt.Println("Waiting for command reply")
 
 	// Waiting three seconds for command to complete
 	time.Sleep(3 * time.Second)
@@ -578,12 +556,6 @@ func get_payloads_from_server() {
 		fmt.Println(err2)
 	}
 	API_response_string := string(API_response)
-
-	// // Unmarshal the response into the tasks array
-	// err3 := json.Unmarshal([]byte(API_response_string), &paylods)
-	// if err3 != nil {
-	// 	fmt.Println(err2)
-	// }
 
 	// Converting the string into a slice of filenames.
 	var slice []string
