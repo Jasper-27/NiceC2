@@ -13,6 +13,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cheynewallace/tabby"
 )
 
 type New_Task struct {
@@ -52,6 +54,9 @@ func main() {
 	fmt.Println("Welcome to NICE C2")
 	fmt.Println("---------------------")
 
+	fmt.Println("Type 'help' to see a list of commands")
+	fmt.Println()
+
 	main_loop()
 }
 
@@ -72,16 +77,8 @@ func main_loop() {
 		// fmt.Println("|" + text + "|")
 
 		if strings.Compare("help", text) == 0 {
-			fmt.Println("use <node> \t\t\t\t\t\t - Sets the node so it doens't have to be specified")
-			fmt.Println("ls\t\t\t\t\t\t\t- List all nodes")
-			fmt.Println("tasks <node>\t\t\t\t\t\t- Display the tasks associated with a specific device. Leave blank to show all tasks")
-			fmt.Println("run <node>\t\t\t\t\t\t- Run a single command on a Node")
-			fmt.Println("shutdown <node>\t\t\t\t\t\t- Shutdown device")
-			fmt.Println("reboot <node>\t\t\t\t\t\t- Reboot device")
-			fmt.Println("Exit\t\t\t\t\t\t\t- Exit the NiceC2 interface")
-			fmt.Println("send-file <node> -f <file> -d <destination path>\t\t- Download file to the client.")
-			fmt.Println("get-file <node> <filepath>\t\t- get-file file from the client.")
-			fmt.Println("payloads \t\t\t\t\t - Lists the available payloads")
+
+			print_help_menu()
 
 		}
 
@@ -222,6 +219,23 @@ func main_loop() {
 
 	}
 
+}
+
+func print_help_menu() {
+	t := tabby.New()
+	t.AddHeader("Command", "Description")
+	t.AddLine("ls", "List all nodes")
+	t.AddLine("use [node]", "Set node you are working on")
+	t.AddLine("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
+	t.AddLine("run [node]", "run a single command on a node")
+	t.AddLine("shutdown [node]", "ask a node to shutdown")
+	t.AddLine("reboot [node]", "ask a node to reboot")
+	t.AddLine("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
+	t.AddLine("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
+	t.AddLine("payloads", "List all the payloads available in the payloads folder")
+	t.AddLine("Exit", "Exit the NiceC2 command line")
+
+	t.Print()
 }
 
 func parse_get_file(input string) (string, string, error) {
