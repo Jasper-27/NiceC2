@@ -14,7 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/gosuri/uitable"
+	"golang.org/x/term"
 )
 
 type New_Task struct {
@@ -225,31 +227,45 @@ type help_message struct {
 	command, description string
 }
 
-var help_messages = []help_message{
-	{"Command", "Description"},
-	{"ls", "List all nodes"},
-	{"use [node]", "Set node you are working on"},
-	{"tasks [node]", "view the task queue for that node. Leaving blank will print all tasks"},
-	{"run [node]", "run a single command on a node"},
-	{"shutdown [node]", "ask a node to shutdown"},
-	{"reboot [node]", "ask a node to reboot"},
-	{"send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node"},
-	{"get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server"},
-	{"payloads", "List all§ the payloads available in the payloads folder"},
-	{"Exit", "Exit the NiceC2 command line"},
-}
-
 func print_help_menu() {
 	table := uitable.New()
-	table.MaxColWidth = 50
+	table.MaxColWidth = 20
+
+	x := find_terminal_width()
+
+	if x > 10 {
+		table.MaxColWidth = uint(x)/2 - 5 // Devides x by 2, and rounds down if it's odd
+	}
 	table.Wrap = true
 
-	for _, help_message := range help_messages {
-		table.AddRow("Command:", help_message.command)
-		table.AddRow("Description:", help_message.description)
-		table.AddRow("") // blank
-	}
+	fmt.Println()
+	table.AddRow("COMMAND", "DESCRIPTION")
+	table.AddRow(color.RedString("-------"), color.RedString("------------"))
+	table.AddRow("ls", "List all nodes")
+	table.AddRow("use [node]", "Set node you are working on")
+	table.AddRow("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
+	table.AddRow("run [node]", "run a single command on a node")
+	table.AddRow("shutdown [node]", "ask a node to shutdown")
+	table.AddRow("reboot [node]", "ask a node to reboot")
+	table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
+	table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
+	table.AddRow("payloads", "List all the payloads available in the payloads folder")
+	table.AddRow("Exit", "Exit the NiceC2 command line")
+
 	fmt.Println(table)
+}
+
+func find_terminal_width() int {
+	if !term.IsTerminal(0) {
+		return 0
+	}
+
+	width, _, err := term.GetSize(0)
+	if err != nil {
+		return 0
+	}
+
+	return width
 }
 
 func parse_get_file(input string) (string, string, error) {
