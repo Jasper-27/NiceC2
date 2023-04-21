@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cheynewallace/tabby"
+	"github.com/gosuri/uitable"
 )
 
 type New_Task struct {
@@ -221,21 +221,35 @@ func main_loop() {
 
 }
 
-func print_help_menu() {
-	t := tabby.New()
-	t.AddHeader("Command", "Description")
-	t.AddLine("ls", "List all nodes")
-	t.AddLine("use [node]", "Set node you are working on")
-	t.AddLine("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
-	t.AddLine("run [node]", "run a single command on a node")
-	t.AddLine("shutdown [node]", "ask a node to shutdown")
-	t.AddLine("reboot [node]", "ask a node to reboot")
-	t.AddLine("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
-	t.AddLine("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
-	t.AddLine("payloads", "List all the payloads available in the payloads folder")
-	t.AddLine("Exit", "Exit the NiceC2 command line")
+type help_message struct {
+	command, description string
+}
 
-	t.Print()
+var help_messages = []help_message{
+	{"Command", "Description"},
+	{"ls", "List all nodes"},
+	{"use [node]", "Set node you are working on"},
+	{"tasks [node]", "view the task queue for that node. Leaving blank will print all tasks"},
+	{"run [node]", "run a single command on a node"},
+	{"shutdown [node]", "ask a node to shutdown"},
+	{"reboot [node]", "ask a node to reboot"},
+	{"send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node"},
+	{"get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server"},
+	{"payloads", "List all§ the payloads available in the payloads folder"},
+	{"Exit", "Exit the NiceC2 command line"},
+}
+
+func print_help_menu() {
+	table := uitable.New()
+	table.MaxColWidth = 50
+	table.Wrap = true
+
+	for _, help_message := range help_messages {
+		table.AddRow("Command:", help_message.command)
+		table.AddRow("Description:", help_message.description)
+		table.AddRow("") // blank
+	}
+	fmt.Println(table)
 }
 
 func parse_get_file(input string) (string, string, error) {
