@@ -253,6 +253,11 @@ func print_help_menu() {
 	table.AddRow("Exit", "Exit the NiceC2 command line")
 
 	fmt.Println(table)
+
+	fmt.Println()
+	fmt.Println("If a node has been sected with 'use', then it doesn't need to be specified in other commands")
+	fmt.Println("Nodes in use will show up in the prompt")
+	fmt.Println()
 }
 
 func find_terminal_width() int {
