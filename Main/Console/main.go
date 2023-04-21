@@ -228,10 +228,6 @@ func main_loop() {
 			}
 
 			path = split[1]
-
-			// fmt.Println("|" + node + "|")
-			// fmt.Println("|" + path + "|")
-
 			get_file(node, path)
 
 		}
@@ -453,11 +449,47 @@ func display_tasks_by_node(NodeID string) {
 func display_nodes() {
 	get_nodes()
 
+	table := uitable.New()
+	table.MaxColWidth = 20
+
+	x := find_terminal_width()
+
+	if x > 10 {
+		table.MaxColWidth = uint(x)/3 - 5 // Devides x by 2, and rounds down if it's odd
+	}
+	table.Wrap = true
+
+	// table.AddRow(node.ID, node.Hostname, node.Platform)
+	// table.AddRow("ls", "List all nodes")
+	// table.AddRow("use [node]", "Set node you are working on")
+	// table.AddRow("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
+	// table.AddRow("run [node]", "run a single command on a node")
+	// table.AddRow("shutdown [node]", "ask a node to shutdown")
+	// table.AddRow("reboot [node]", "ask a node to reboot")
+	// table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
+	// table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
+	// table.AddRow("payloads", "List all the payloads available in the payloads folder")
+	// table.AddRow("Exit", "Exit the NiceC2 command line")
+
+	table.AddRow(color.GreenString("ID"), color.GreenString("HOSTNAME"), color.GreenString("PLATFORM"), color.GreenString("LAST CHECK IN"))
+	table.AddRow(color.WhiteString("--"), color.WhiteString("--------"), color.WhiteString("---------"), color.WhiteString("-------------------"))
 	// Displays the nodes in a sort of table thing. needs to be done better
 	for _, node := range nodes {
-		fmt.Println("ID : ", node.ID, "	| Hostname: ", node.Hostname, "	 | Platform: ", node.Platform)
+		// fmt.Println("ID : ", node.ID, "	| Hostname: ", node.Hostname, "	 | Platform: ", node.Platform)
+
+		table.AddRow(node.ID, node.Hostname, node.Platform, convertToPretyyTime(node.Last_Check_In))
 	}
+
+	fmt.Println(table)
 }
+
+func convertToPretyyTime(datetimeStr string) string {
+
+	processed_text := datetimeStr[:19]
+
+	return (processed_text)
+}
+
 func get_nodes() {
 
 	// This allows us to use a self signed certificate.
