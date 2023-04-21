@@ -64,12 +64,17 @@ func main() {
 
 func main_loop() {
 
+	var command_read bool
+
 	// Currently selected
 	var target string = ""
 
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
+
+		command_read = false
+
 		fmt.Print("(" + target + ")-> ")
 		text, _ := reader.ReadString('\n')
 
@@ -82,6 +87,8 @@ func main_loop() {
 
 			print_help_menu()
 
+			command_read = true
+
 		}
 
 		if strings.Compare("exit", text) == 0 {
@@ -92,14 +99,17 @@ func main_loop() {
 		if strings.HasPrefix(text, "use ") {
 			target = text[4:]
 			fmt.Println("Now using node '" + target + "'")
+			command_read = true
 		}
 
 		if strings.Compare("ls", text) == 0 {
 			display_nodes()
+			command_read = true
 		}
 
 		if strings.Compare("payloads", text) == 0 {
 			get_payloads_from_server()
+			command_read = true
 		}
 
 		if strings.HasPrefix(text, "tasks") {
@@ -109,17 +119,21 @@ func main_loop() {
 				node = text[6:]
 			}
 			display_tasks_by_node(node)
+			command_read = true
 		}
 
 		if strings.HasPrefix(text, "run") {
+			command_read = true
 			node := target
 			if len(strings.TrimSpace(text)) > 3 {
 				node = text[4:]
 			}
 			handle_run(node)
+
 		}
 
 		if strings.HasPrefix(text, "shutdown") {
+			command_read = true
 			node := target
 			if len(strings.TrimSpace(text)) > 8 {
 				node = text[9:]
@@ -128,6 +142,7 @@ func main_loop() {
 		}
 
 		if strings.HasPrefix(text, "reboot") {
+			command_read = true
 			node := target
 			if len(strings.TrimSpace(text)) > 6 {
 				node = text[7:]
@@ -136,6 +151,7 @@ func main_loop() {
 		}
 
 		if strings.HasPrefix(text, "send-file") {
+			command_read = true
 
 			processed_text := text[10:]
 
@@ -182,6 +198,7 @@ func main_loop() {
 		}
 
 		if strings.HasPrefix(text, "get-file") {
+			command_read = true
 			text := text[9:]
 
 			var node string
@@ -217,6 +234,11 @@ func main_loop() {
 
 			get_file(node, path)
 
+		}
+
+		if command_read == false {
+
+			fmt.Println(color.RedString("ERROR: ") + "Command not recognised")
 		}
 
 	}
