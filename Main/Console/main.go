@@ -106,8 +106,22 @@ func main_loop() {
 		}
 
 		if strings.HasPrefix(text, "use ") {
-			target = text[4:]
-			fmt.Println("Now using node '" + target + "'")
+			proposed_target := text[4:]
+
+			target_node, err := check_node(proposed_target)
+			if err != nil {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+
+			} else {
+				if target_node.Hostname == "" {
+					target = target_node.ID
+				} else {
+					target = target_node.Hostname
+				}
+
+				fmt.Println("Now using node '" + target + "'")
+			}
+
 			command_read = true
 		}
 
@@ -497,6 +511,32 @@ func convertToPretyyTime(datetimeStr string) string {
 	processed_text := datetimeStr[:19]
 
 	return (processed_text)
+}
+
+// Function to check if node exists
+func check_node(input string) (node, error) {
+
+	// Support for both NodeID and Hostname
+	var found bool = false
+	var empty_node node // create an empty node for if none are found.
+	for _, node := range nodes {
+
+		if node.ID == input {
+			found = true
+			return node, nil
+		}
+
+		if node.Hostname == input {
+			found = true
+			return node, nil
+		}
+	}
+	if found == false {
+		return empty_node, errors.New("Node doesn't exist")
+	}
+
+	// This line will never be executed, but Go requires it
+	return empty_node, nil
 }
 
 func get_nodes() {
