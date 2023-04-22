@@ -97,7 +97,7 @@ func main_loop() {
 			return
 		}
 
-		if strings.Compare("clear", text) == 0 {
+		if strings.Compare("clear", text) == 0 || strings.Compare("cls", text) == 0 {
 			command_read = true
 
 			cmd := exec.Command("clear") // create a new command to clear the terminal
