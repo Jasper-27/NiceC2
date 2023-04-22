@@ -72,6 +72,7 @@ func main_loop() {
 
 	reader := bufio.NewReader(os.Stdin)
 
+	// START INPUT SECTION
 	for {
 
 		command_read = false
@@ -105,12 +106,18 @@ func main_loop() {
 			cmd.Run()
 		}
 
-		if strings.HasPrefix(text, "use ") {
-			proposed_target := text[4:]
+		if strings.HasPrefix(text, "use") {
+			proposed_target := strings.TrimSpace(text[3:])
 
-			target_node, err := check_node(proposed_target)
+			target_node, err := Node_from_string(proposed_target)
 			if err != nil {
-				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+
+				if len(proposed_target) < 1 {
+					target = ""
+				} else {
+					fmt.Println(color.RedString("ERROR: ") + "Node not found")
+
+				}
 
 			} else {
 				if target_node.Hostname == "" {
@@ -141,7 +148,13 @@ func main_loop() {
 			if len(strings.TrimSpace(text)) > 5 {
 				node = text[6:]
 			}
-			display_tasks_by_node(node)
+
+			// Checks the node exists. If it does do the thing
+			if check_node(node) != false {
+				display_tasks_by_node(node)
+			} else {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+			}
 			command_read = true
 		}
 
@@ -151,7 +164,13 @@ func main_loop() {
 			if len(strings.TrimSpace(text)) > 3 {
 				node = text[4:]
 			}
-			handle_run(node)
+
+			// Checks the node exists. If it does do the thing
+			if check_node(node) != false {
+				handle_run(node)
+			} else {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+			}
 
 		}
 
@@ -161,7 +180,14 @@ func main_loop() {
 			if len(strings.TrimSpace(text)) > 8 {
 				node = text[9:]
 			}
-			shutdown(node)
+
+			// Checks the node exists. If it does do the thing
+			if check_node(node) != false {
+				shutdown(node)
+			} else {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+			}
+
 		}
 
 		if strings.HasPrefix(text, "reboot") {
@@ -170,7 +196,14 @@ func main_loop() {
 			if len(strings.TrimSpace(text)) > 6 {
 				node = text[7:]
 			}
-			reboot(node)
+
+			// Checks the node exists. If it does do the thing
+			if check_node(node) != false {
+				reboot(node)
+			} else {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+			}
+
 		}
 
 		if strings.HasPrefix(text, "send-file") {
@@ -212,7 +245,14 @@ func main_loop() {
 			if custom_target != "" {
 
 				fmt.Println("Downloading file " + file + " to " + destination + " on " + custom_target)
-				send_file(custom_target, file, destination)
+
+				// Checks the node exists. If it does do the thing
+				if check_node(custom_target) == true {
+					send_file(custom_target, file, destination)
+				} else {
+					fmt.Println(color.RedString("ERROR: ") + "Node not found")
+				}
+
 			} else {
 				fmt.Println("Downloading file " + file + " to " + destination + " on " + target)
 				send_file(target, file, destination)
@@ -251,7 +291,13 @@ func main_loop() {
 			}
 
 			path = split[1]
-			get_file(node, path)
+
+			// checks the node is valid before sending.
+			if check_node(node) != false {
+				get_file(node, path)
+			} else {
+				fmt.Println(color.RedString("ERROR: ") + "Node not found")
+			}
 
 		}
 
@@ -263,6 +309,8 @@ func main_loop() {
 	}
 
 }
+
+/// END INPUT SECION
 
 type help_message struct {
 	command, description string
@@ -513,8 +561,22 @@ func convertToPretyyTime(datetimeStr string) string {
 	return (processed_text)
 }
 
+func check_node(input string) bool {
+	_, err := Node_from_string(input)
+
+	if err != nil {
+		return false
+	}
+
+	return true
+
+}
+
 // Function to check if node exists
-func check_node(input string) (node, error) {
+func Node_from_string(input string) (node, error) {
+
+	// Makes sure we have the most up to date list of nodes
+	get_nodes()
 
 	// Support for both NodeID and Hostname
 	var found bool = false
