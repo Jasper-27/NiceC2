@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -75,7 +76,7 @@ func main_loop() {
 
 		command_read = false
 
-		fmt.Print("(" + target + ")-> ")
+		fmt.Print("(" + color.BlueString(target) + ")-> ")
 		text, _ := reader.ReadString('\n')
 
 		// convert CRLF to LF
@@ -94,6 +95,14 @@ func main_loop() {
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
 			return
+		}
+
+		if strings.Compare("clear", text) == 0 {
+			command_read = true
+
+			cmd := exec.Command("clear") // create a new command to clear the terminal
+			cmd.Stdout = os.Stdout       // set the command's stdout to os.Stdout
+			cmd.Run()
 		}
 
 		if strings.HasPrefix(text, "use ") {
