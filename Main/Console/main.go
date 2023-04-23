@@ -158,16 +158,35 @@ func main_loop() {
 			command_read = true
 		}
 
+		// Running a custom command
 		if strings.HasPrefix(text, "run") {
 			command_read = true
 			node := target
-			if len(strings.TrimSpace(text)) > 3 {
-				node = text[4:]
+
+			split := strings.SplitN(text, " !", 2) // Splits the string in 2 on the 1st instance of " !"
+			if len(split) < 2 {
+				fmt.Println(color.RedString("ERROR: ") + "can't parse string")
+
+			}
+
+			command_string := split[1]
+
+			fmt.Println(command_string)
+			fmt.Println(node)
+
+			split2 := strings.Split(split[0], "run ")
+
+			if len(split2) == 1 {
+				// then there has been no node specified
+
+				node = target
+			} else if len(split2) == 2 {
+				node = split2[1]
 			}
 
 			// Checks the node exists. If it does do the thing
 			if check_node(node) != false {
-				handle_run(node)
+				handle_run(node, command_string)
 			} else {
 				fmt.Println(color.RedString("ERROR: ") + "Node not found")
 			}
@@ -406,17 +425,18 @@ func reboot(node string) {
 	get_task_by_id(task_id)
 }
 
-func handle_run(node string) {
+func handle_run(node string, command_string string) {
 
-	var command string
+	// var command string
 
-	fmt.Print("Enter command here: ")
-	sub_reader := bufio.NewReader(os.Stdin)
-	command, _ = sub_reader.ReadString('\n')
+	// fmt.Print("Enter command here: ")
+	// sub_reader := bufio.NewReader(os.Stdin)
+	// command, _ = sub_reader.ReadString('\n')
+
 	// convert CRLF to LF
-	command = strings.Replace(command, "\n", "", -1)
+	// command = strings.Replace(command, "\n", "", -1)
 
-	task_id := create_task_by_ID(node, "run command", command, "2")
+	task_id := create_task_by_ID(node, "run command", command_string, "2")
 
 	fmt.Println("Waiting for command reply")
 
