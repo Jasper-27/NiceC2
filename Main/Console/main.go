@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -158,16 +159,50 @@ func main_loop() {
 			command_read = true
 		}
 
+		// Running a custom command
+
+		if strings.HasPrefix(text, "!") {
+			command_read = true
+
+			if target == "" {
+				fmt.Println(color.RedString("ERROR: ") + "No node specified. Please use run [node] !command if specifying node in line")
+			}
+
+			command_string := text[1:]
+
+			encoded_command_string := base64.StdEncoding.EncodeToString([]byte(command_string))
+
+			handle_run(target, encoded_command_string)
+
+		}
 		if strings.HasPrefix(text, "run") {
 			command_read = true
 			node := target
-			if len(strings.TrimSpace(text)) > 3 {
-				node = text[4:]
+
+			split := strings.SplitN(text, " !", 2) // Splits the string in 2 on the 1st instance of " !"
+			if len(split) < 2 {
+				fmt.Println(color.RedString("ERROR: ") + "can't parse string")
+
 			}
+
+			command_string := split[1]
+
+			split2 := strings.Split(split[0], "run ")
+
+			if len(split2) == 1 {
+				// then there has been no node specified
+
+				node = target
+			} else if len(split2) == 2 {
+				node = split2[1]
+			}
+
+			// Encodes command (this is to help with using "")
+			encoded_command_string := base64.StdEncoding.EncodeToString([]byte(command_string))
 
 			// Checks the node exists. If it does do the thing
 			if check_node(node) != false {
-				handle_run(node)
+				handle_run(node, encoded_command_string)
 			} else {
 				fmt.Println(color.RedString("ERROR: ") + "Node not found")
 			}
@@ -333,7 +368,8 @@ func print_help_menu() {
 	table.AddRow("ls", "List all nodes")
 	table.AddRow("use [node]", "Set node you are working on")
 	table.AddRow("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
-	table.AddRow("run [node]", "run a single command on a node")
+	table.AddRow("run [node] ![command]", "run a single command on a node, specifying the node in line")
+	table.AddRow("![command]", "run a command on a node, only works if node is already being used")
 	table.AddRow("shutdown [node]", "ask a node to shutdown")
 	table.AddRow("reboot [node]", "ask a node to reboot")
 	table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
@@ -406,17 +442,18 @@ func reboot(node string) {
 	get_task_by_id(task_id)
 }
 
-func handle_run(node string) {
+func handle_run(node string, command_string string) {
 
-	var command string
+	// var command string
 
-	fmt.Print("Enter command here: ")
-	sub_reader := bufio.NewReader(os.Stdin)
-	command, _ = sub_reader.ReadString('\n')
+	// fmt.Print("Enter command here: ")
+	// sub_reader := bufio.NewReader(os.Stdin)
+	// command, _ = sub_reader.ReadString('\n')
+
 	// convert CRLF to LF
-	command = strings.Replace(command, "\n", "", -1)
+	// command = strings.Replace(command, "\n", "", -1)
 
-	task_id := create_task_by_ID(node, "run command", command, "2")
+	task_id := create_task_by_ID(node, "run command", command_string, "2")
 
 	fmt.Println("Waiting for command reply")
 
@@ -506,7 +543,20 @@ func display_tasks_by_node(NodeID string) {
 			fmt.Println("######################################")
 			fmt.Println("Task ID:		" + task.TaskID)
 			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
-			fmt.Println("Argument: 		" + task.Content)
+
+			// Handles a base64 encoded string
+			if isBase64(task.Content) == true {
+
+				decoded, err := base64.StdEncoding.DecodeString(task.Content)
+				if err != nil {
+					fmt.Println("Error decoding base64:", err)
+					return
+				}
+				fmt.Println("Argument: 		" + string(decoded))
+			} else {
+				fmt.Println("Argument: 		" + task.Content)
+			}
+
 			fmt.Println("Progress: 		" + task.Progress)
 			fmt.Println("Result: ")
 			fmt.Println("----")
@@ -691,7 +741,20 @@ func get_task_by_id(input string) {
 			fmt.Println("######################################")
 			fmt.Println("Task ID:		" + task.TaskID)
 			fmt.Println("Action:			" + task.Action) // No idea why two tabs 🤷
-			fmt.Println("Argument: 		" + task.Content)
+
+			// Handles a base64 encoded string
+			if isBase64(task.Content) == true {
+
+				decoded, err := base64.StdEncoding.DecodeString(task.Content)
+				if err != nil {
+					fmt.Println("Error decoding base64:", err)
+					return
+				}
+				fmt.Println("Argument: 		" + string(decoded))
+			} else {
+				fmt.Println("Argument: 		" + task.Content)
+			}
+
 			fmt.Println("Progress: 		" + task.Progress)
 			fmt.Println("Result: ")
 			fmt.Println("----")
@@ -790,4 +853,10 @@ func get_payloads_from_server() {
 
 	fmt.Println()
 
+}
+
+// Checks if a string is base64 encoded
+func isBase64(s string) bool {
+	_, err := base64.StdEncoding.DecodeString(s)
+	return err == nil
 }
