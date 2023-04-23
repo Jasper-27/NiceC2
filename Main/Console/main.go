@@ -160,6 +160,21 @@ func main_loop() {
 		}
 
 		// Running a custom command
+
+		if strings.HasPrefix(text, "!") {
+			command_read = true
+
+			if target == "" {
+				fmt.Println(color.RedString("ERROR: ") + "No node specified. Please use run [node] !command if specifying node in line")
+			}
+
+			command_string := text[1:]
+
+			encoded_command_string := base64.StdEncoding.EncodeToString([]byte(command_string))
+
+			handle_run(target, encoded_command_string)
+
+		}
 		if strings.HasPrefix(text, "run") {
 			command_read = true
 			node := target
@@ -171,9 +186,6 @@ func main_loop() {
 			}
 
 			command_string := split[1]
-
-			fmt.Println(command_string)
-			fmt.Println(node)
 
 			split2 := strings.Split(split[0], "run ")
 
