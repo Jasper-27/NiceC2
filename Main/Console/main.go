@@ -64,6 +64,34 @@ func main() {
 	main_loop()
 }
 
+func run_tests() {
+
+	// test running commands
+
+	// Testing a normal command
+	test_command_1 := base64.StdEncoding.EncodeToString([]byte("touch /Users/jasper/Desktop/test_touch"))
+	handle_run("Jasper's Air", test_command_1)
+
+	// Testing command that doesn't exist
+	test_command_2 := base64.StdEncoding.EncodeToString([]byte("kasdlkj akjd"))
+	handle_run("Jasper's Air", test_command_2)
+
+	// Testing command that contains special charecters
+	test_command_3 := base64.StdEncoding.EncodeToString([]byte(`say "hello there"`))
+	handle_run("Jasper's Air", test_command_3)
+
+	// Test get files
+	get_file("Jasper's Air", "/Users/jasper/Desktop/Not_test.txt") // test file doesn't exist
+	get_file("Jasper's Air", "/Users/jasper/Desktop/test.txt")     // test file does exist
+	get_file("Jasper's Air", "/Users/jasper/Desktop/test_big.zip") // test big file
+
+	// Test sending files
+	send_file("Jasper's Air", "test.txt", "/Users/jasper/Desktop/Not_real/text.txt") // broken filepath
+	send_file("Jasper's Air", "test.txt", "/Users/jasper/Desktop/test.txt")          // Normal file send
+	send_file("Jasper's Air", "test.txt", "/Users/jasper/Desktop/test_big.zip")      // big file
+
+}
+
 func main_loop() {
 
 	var command_read bool

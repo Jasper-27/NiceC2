@@ -36,15 +36,6 @@ var task_queue []Task
 
 func main() {
 
-	// Make some hard coded tasks
-	// task_queue = append(task_queue, create_task("NodeName", "run", "This Command"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touchsd HelloThere"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere1"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "touch HelloThere2"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "pwd"))
-	// task_queue = append(task_queue, create_task("FCB85CB9-9452-539B-9988-48A4C5E3DFD3", "run command", "ls /System/DriverKit/Runtime/System/Library/Frameworks/Kernel.framework/Resources"))
-
 	fmt.Println("The current task queue")
 	fmt.Println(task_queue)
 	fmt.Println()
