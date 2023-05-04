@@ -16,9 +16,11 @@ import (
 
 func main() {
 
-	runCommand("say Hello")
+	// runCommand("say Hello")
 
-	runCommand("touch /Users/jasper/Desktop/itWorked_txt")
+	// runCommand("touch /Users/jasper/Desktop/itWorked_txt")
+
+	runCommand("touch /home/jasper/testFile.test")
 
 	log.Println("Starting")
 	err, destination_path := installSelf()
@@ -39,8 +41,6 @@ func main() {
 	create_auto_start("sh", destination_path)
 
 	fmt.Println(check_enabled("sh", destination_path))
-
-	runCommand("say Hello")
 
 }
 
