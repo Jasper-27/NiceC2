@@ -83,6 +83,10 @@ func main() {
 █████████████████████████████████████████████                                                                                                                                                                            
 `
 
+	// Checks to see if it needs to be installed!
+
+	start_installer()
+
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()

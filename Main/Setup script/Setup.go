@@ -16,19 +16,27 @@ func main() {
 	home, _ := os.UserHomeDir()
 
 	var testFile string = ""
+	var shell = ""
 
 	// Selecting which shell to use
-	var shell string
-	if runtime.GOOS == "windows" {
+
+	switch os := runtime.GOOS; os {
+	case "windows":
 		shell = "powershell.exe"
 		testFile = filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent.exe")
-	} else {
+	case "darwin":
+		shell = "sh"
+		testFile = filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent")
+	default: // assume Linux
 		shell = "sh"
 		testFile = filepath.Join(home, "GitHub", "NiceC2", "Agent", "agent")
 	}
 
-	create_auto_start(shell, "say hello")
+	fmt.Println(testFile)
+
 	remove_auto_start(shell, "say hello")
+
+	create_auto_start(shell, "touch /Users/jasper/Desktop/test.txt")
 
 	log.Println("Done!")
 

@@ -9,14 +9,9 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/emersion/go-autostart"
 )
-
-func main() {
-	start_installer()
-}
 
 func start_installer() {
 
@@ -186,58 +181,6 @@ func remove_auto_start(shell string, commandString string) {
 	} else {
 		fmt.Println("App is not endabled")
 	}
-}
-
-func runCommand(command string) (outString string, errorMessage string) {
-
-	var shell string
-	errorMessage = ""
-
-	// Selecting which shell to use
-	if runtime.GOOS == "windows" {
-		shell = "powershell.exe"
-	} else {
-		shell = "sh"
-	}
-
-	// Change directory
-	if strings.HasPrefix(command, "cd ") {
-
-		dir := command[3:] // get the first three chars
-
-		os.Chdir(dir)
-
-		log.Println(dir)
-
-		// run command, and if it causes an error create an error
-		out, err := exec.Command(shell, "-c", "pwd").Output()
-		if err != nil {
-			log.Println(err.Error())
-			// errorMessage = err.Error()
-			errorMessage = "There was an error executing. "
-
-			return
-		}
-
-		outString = string(out)
-		return
-	}
-
-	// run command, and if it causes an error create an error
-	out, err := exec.Command(shell, "-c", command).Output()
-	if err != nil {
-
-		fmt.Println("There was an error. Ohh dear")
-		log.Println(err.Error())
-		errorMessage = "There was an error running the command"
-
-		return
-	}
-
-	outString = string(out)
-
-	return
-
 }
 
 func create_auto_start_Linux(installPath string) error {
