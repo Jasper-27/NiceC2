@@ -1,12 +1,9 @@
 # NiceC2
 Comp3000 Final Year Project.
 
-
-## Links 
-
 Trello: https://trello.com/b/cnf4AldV/nicec2 
 
-## Description 
+# Description 
 
 NiceC2 is a system for managing multiple computers on different networks. The system uses techniques often employed in command and control situations, hence the name. 
 
@@ -19,9 +16,18 @@ The NiceC2 server, and console are designed to be deployed on a Linux server. Th
 
 ## Server 
 
+The server can be built using the command `go build`.
+
+The server requres a certificate and key to function correctly. These files need to be placed in the same directory as the server executable, and called `server.crt`, and `server.key` respectivly. 
+
+The server does come with an auto-installer. This installer will build the project, copy it to `/usr/local/bin/NiceC2_server/` and create a systemd service to make it start automatically. This install script doesn't generate the certificate or key, this will have to be done manually. 
+
+The install scropt can be run with `./install.sh`
+
 
 ## Console
 
+The 
 
 
 

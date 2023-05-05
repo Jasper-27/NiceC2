@@ -1,12 +1,11 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -61,48 +60,7 @@ func handleRequests() {
 	// Console endpoints
 	http.HandleFunc("/list_payloads", list_payloads)
 
-	// log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
-
-	cert, err := tls.LoadX509KeyPair("server.crt", "server.key")
-	if err != nil {
-		panic(err)
-	}
-
-	// Load the CA certificate
-	caCert, err := ioutil.ReadFile("ca.crt")
-	if err != nil {
-		panic(err)
-	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    caCertPool,
-	}
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/checkin", nodeCheckIn)
-	mux.HandleFunc("/node_response", node_response)
-	mux.HandleFunc("/create_task", create_task_API)
-	mux.HandleFunc("/get_nodes", get_nodes)
-	mux.HandleFunc("/get_tasks", get_tasks)
-	mux.HandleFunc("/send_file/", send_file_handler)
-	mux.HandleFunc("/get_file", get_file_handler)
-	mux.HandleFunc("/list_payloads", list_payloads)
-
-	server := &http.Server{
-		Addr:      ":8081",
-		Handler:   mux,
-		TLSConfig: config,
-	}
-
-	err = server.ListenAndServeTLS("server.crt", "server.key")
-	if err != nil {
-		panic(err)
-	}
+	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
 }
 
 func get_tasks(w http.ResponseWriter, req *http.Request) {

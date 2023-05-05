@@ -123,6 +123,25 @@ func installSelf() (error, string) {
 		}
 	}
 
+	// Copy the server.crt file to the same directory as the executable.
+	crtFile := "server.crt"
+	crtSrc, err := os.Open(crtFile)
+	if err != nil {
+		return fmt.Errorf("could not open %s file: %v", crtFile, err), ""
+	}
+	defer crtSrc.Close()
+
+	crtDst, err := os.Create(filepath.Join(dst, crtFile))
+	if err != nil {
+		return fmt.Errorf("could not create %s file: %v", crtFile, err), ""
+	}
+	defer crtDst.Close()
+
+	_, err = io.Copy(crtDst, crtSrc)
+	if err != nil {
+		return fmt.Errorf("could not copy File to Destination"), ""
+	}
+
 	return nil, filepath.Join(dst, filepath.Base(self))
 
 }

