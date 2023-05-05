@@ -53,6 +53,7 @@ ExecStart=$INSTALL_DIR/$PROGRAM_NAME
 
 [Install]
 WantedBy=multi-user.target
+User=root
 EOF
 
 # Reload systemd to detect the new service
