@@ -1,5 +1,6 @@
 #!/bin/bash
 
+Echo Installing the NICEC2 Server! 
 
 # Get the hostname for the cirtificates 
 read -p "Enter common name for certificates: " hostname
@@ -66,3 +67,6 @@ sudo systemctl enable $PROGRAM_NAME.service
 sudo systemctl start $PROGRAM_NAME.service
 
 echo "Success: Installed $PROGRAM_NAME to $INSTALL_DIR and configured it to start on boot"
+
+echo ""
+echo ""
