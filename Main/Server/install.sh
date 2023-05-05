@@ -40,7 +40,7 @@ openssl req -new -subj "/C=GB/ST=Devon/CN=$hostname" -newkey rsa:2048 -nodes -ke
 openssl x509 -req -days 365 -in $INSTALL_DIR/server.csr -signkey $INSTALL_DIR/server.key -out $INSTALL_DIR/server.crt
 
 echo "Key for clients: $INSTALL_DIR"
-echo $INSTALL_DIR/server.crt
+cat $INSTALL_DIR/server.crt
 
 # Create a systemd service for the program
 sudo tee /etc/systemd/system/$PROGRAM_NAME.service > /dev/null << EOF
