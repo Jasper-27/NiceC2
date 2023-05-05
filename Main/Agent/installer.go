@@ -14,8 +14,6 @@ import (
 )
 
 func start_installer() {
-
-	log.Println("STARTING INSTALLER!")
 	err, destination_path := installSelf()
 	if err != nil {
 		fmt.Println(err)
@@ -26,7 +24,7 @@ func start_installer() {
 
 	switch runtime.GOOS {
 	case "linux":
-		fmt.Println("Linux")
+		fmt.Println("Linux detected. Creating service...")
 
 		// Does things different in Linux, so that the code can run as root
 		err := create_auto_start_Linux(destination_path)
@@ -35,15 +33,16 @@ func start_installer() {
 		}
 
 	case "darwin":
-		fmt.Println("MacOS")
+		fmt.Println("MacOS detected. Creating Auto-Start for MacOS...")
 
 		create_auto_start("sh", destination_path)
 	case "windows":
-		fmt.Println("Windows")
+		fmt.Println("Windows detected. Creating auto-start for Windows!....")
 
 		create_auto_start("ps", destination_path)
 	default:
-		fmt.Println("Unsupported operating system ")
+		fmt.Println("Error detecting OS")
+		return
 
 	}
 
