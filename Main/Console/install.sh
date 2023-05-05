@@ -10,7 +10,7 @@ echo $hostname
 PROGRAM_NAME="NiceC2_Console"
 
 # Set the path to the directory where you want to install your program
-INSTALL_DIR="/usr/local/bin/NiceC2_server"
+INSTALL_DIR="/usr/local/bin/$PROGRAM_NAME"
 mkdir $INSTALL_DIR
 
 
