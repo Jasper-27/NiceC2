@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+# Get the hostname for the cirtificates 
+read -p "Enter common name for certificates: " hostname
+
+echo $hostname
+
 # Set the name of your Golang program
 PROGRAM_NAME="NiceC2_server"
 
@@ -27,6 +33,14 @@ fi
 # Install the program
 sudo cp $PROGRAM_NAME $INSTALL_DIR/$PROGRAM_NAME
 sudo chmod +x $INSTALL_DIR/$PROGRAM_NAME
+
+
+# Setup server certificates 
+openssl req -new -subj "/C=GB/ST=Devon/CN=$hostname" -newkey rsa:2048 -nodes -keyout $INSTALL_DIR/server.key -out $INSTALL_DIR/server.csr   
+openssl x509 -req -days 365 -in $INSTALL_DIR/server.csr -signkey $INSTALL_DIR/server.key -out $INSTALL_DIR/server.crt
+
+echo "Key for clients: $INSTALL_DIR"
+echo $INSTALL_DIR/server.crt
 
 # Create a systemd service for the program
 sudo tee /etc/systemd/system/$PROGRAM_NAME.service > /dev/null << EOF
