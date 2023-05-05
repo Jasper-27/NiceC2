@@ -32,7 +32,7 @@ fi
 
 # Install the program
 sudo cp $PROGRAM_NAME $INSTALL_DIR/$PROGRAM_NAME
-sudo chmod +x $INSTALL_DIR/$PROGRAM_NAME
+sudo chmod +x $INSTALL_DIR/*
 
 
 # Setup server certificates 
