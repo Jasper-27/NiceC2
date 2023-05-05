@@ -1,17 +1,10 @@
 #!/bin/bash
 
-
-# Get the hostname for the cirtificates 
-read -p "Enter common name for certificates: " hostname
-
-echo $hostname
-
 # Set the name of your Golang program
-PROGRAM_NAME="NiceC2_Console"
+PROGRAM_NAME="NiceC2_console"
 
 # Set the path to the directory where you want to install your program
-INSTALL_DIR="/usr/local/bin/$PROGRAM_NAME"
-mkdir $INSTALL_DIR
+INSTALL_DIR="/usr/local/bin/"
 
 
 # Set the version number of your program
@@ -28,5 +21,5 @@ fi
 
 # Install the program
 sudo cp $PROGRAM_NAME $INSTALL_DIR/$PROGRAM_NAME
-sudo chmod +x $INSTALL_DIR/*
+sudo chmod +x $INSTALL_DIR/$PROGRAM_NAME
 
