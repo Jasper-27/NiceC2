@@ -18,3 +18,6 @@ Main/Server/nodes.json
 *.test
 /Main/Agent/uploads/*
 Learning/Persistance/persistance_test
+Main/Agent/agent
+Main/Server/server
+Main/Setup script/agent
