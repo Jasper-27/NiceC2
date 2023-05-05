@@ -10,7 +10,7 @@ echo $hostname
 PROGRAM_NAME="NiceC2_server"
 
 # Set the path to the directory where you want to install your program
-INSTALL_DIR="/usr/local/bin/NiceC2_server/"
+INSTALL_DIR="/usr/local/bin/NiceC2_server"
 mkdir $INSTALL_DIR
 
 # Making the uploads and payloads folder 
@@ -48,21 +48,21 @@ sudo tee /etc/systemd/system/$PROGRAM_NAME.service > /dev/null << EOF
 Description=$PROGRAM_NAME
 
 [Service]
-Type=simple
+WorkingDirectory=$INSTALL_DIR
+User=root
 ExecStart=$INSTALL_DIR/$PROGRAM_NAME
 
 [Install]
 WantedBy=multi-user.target
-User=root
 EOF
 
 # Reload systemd to detect the new service
 sudo systemctl daemon-reload
 
 # Enable the service to start on boot
-sudo systemctl enable $PROGRAM_NAME
+sudo systemctl enable $PROGRAM_NAME.service
 
 # Start the service
-sudo systemctl start $PROGRAM_NAME
+sudo systemctl start $PROGRAM_NAME.service
 
 echo "Success: Installed $PROGRAM_NAME to $INSTALL_DIR and configured it to start on boot"
