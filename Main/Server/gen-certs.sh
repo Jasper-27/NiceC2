@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Generate self-signed CA certificate
-openssl req -x509 -newkey rsa:2048 -keyout ca.key -out ca.crt -days 365 -nodes -subj '/CN=root-27.duckdns.org'
+openssl req -x509 -newkey rsa:2048 -keyout ca.key -out ca.crt -days 365 -nodes -subj '/CN=MyCA'
 
 # Generate server key and CSR
 openssl genrsa -out server.key 2048
