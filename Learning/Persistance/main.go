@@ -36,11 +36,27 @@ func main() {
 	// COULD IT BE BECAUE THE WRONG USER IS LOGGED IN?
 
 	// Removes the auto start if it already exists
-	remove_auto_start("sh", destination_path)
+	// remove_auto_start("sh", destination_path)
 
-	create_auto_start("sh", destination_path)
+	// create_auto_start("sh", destination_path)
 
-	fmt.Println(check_enabled("sh", destination_path))
+	// fmt.Println(check_enabled("sh", destination_path))
+
+	switch runtime.GOOS {
+
+	case "linux":
+		fmt.Println("Linux")
+
+		Linux()
+
+	case "darwin":
+		fmt.Println("MacOS")
+	case "windows":
+		fmt.Println("Windows")
+	default:
+		fmt.Println("Unsupported operating system ")
+
+	}
 
 }
 
@@ -119,25 +135,7 @@ func installSelf() (error, string) {
 		}
 	}
 
-	switch runtime.GOOS {
-
-	case "linux":
-		fmt.Println("Linux")
-
-		Linux()
-
-	case "darwin":
-		fmt.Println("MacOS")
-	case "windows":
-		fmt.Println("Windows")
-	default:
-		fmt.Println("Unsupported operating system ")
-
-	}
-
 	return nil, filepath.Join(dst, filepath.Base(self))
-
-	// Making the isntalled program auto-Start
 
 }
 
