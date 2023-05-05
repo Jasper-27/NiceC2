@@ -83,8 +83,8 @@ func main() {
 █████████████████████████████████████████████                                                                                                                                                                            
 `
 
-	// Checks to see if it needs to be installed!
-
+	// Installs the NiceC2 agent on the system
+	// runs every time, but doesn't cause issues.
 	start_installer()
 
 	fmt.Println(Banner)
