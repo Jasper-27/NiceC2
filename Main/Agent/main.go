@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -36,6 +37,8 @@ var command_server string = "https://localhost:8081"
 
 // Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
+
+var certPool *x509.CertPool
 
 type CheckIn struct {
 	ID       string `json:"ID"`
@@ -92,6 +95,29 @@ func main() {
 	NodeID, _ = machineid.ID()
 	// NodeID = "test"
 
+	// Weird cirt stuff
+
+	// Load the custom certificate file
+	pem, err := ioutil.ReadFile("server.crt")
+	if err != nil {
+		log.Fatalf("Failed to read certificate file: %v", err)
+	}
+
+	// Create a certificate pool with the custom certificate
+	certPool = x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pem) {
+		log.Fatalf("Failed to add certificate to pool")
+	}
+
+	// Create an HTTP client with the custom certificate pool
+	// client := &http.Client{
+	// 	Transport: &http.Transport{
+	// 		TLSClientConfig: &tls.Config{
+	// 			RootCAs: certPool,
+	// 		},
+	// 	},
+	// }
+
 	// Checks in every 10 seconds.
 	for {
 		time.Sleep(1 * time.Second)
@@ -122,7 +148,13 @@ func send_response(response_to_task Task_Response) {
 	r.Header.Add("Content-Type", "application/json")
 
 	//Create a client to send the data and then send it
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs: certPool,
+			},
+		},
+	}
 	res, err := client.Do(r)
 	if err != nil {
 		// panic(err)
@@ -136,7 +168,7 @@ func send_response(response_to_task Task_Response) {
 func checkIn() {
 
 	// This allows us to use a self signed certificate.
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	// Getting the info
 	hostname, _ := os.Hostname()
