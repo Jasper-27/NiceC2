@@ -265,7 +265,7 @@ Description=My program service
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/NiceC2/per
+ExecStart=/usr/local/bin/NiceC2/persistance_test
 WorkingDirectory=/usr/local/bin/
 Restart=on-failure
 User=root
