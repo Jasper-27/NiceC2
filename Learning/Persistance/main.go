@@ -54,8 +54,12 @@ func main() {
 
 	case "darwin":
 		fmt.Println("MacOS")
+
+		create_auto_start("sh", destination_path)
 	case "windows":
 		fmt.Println("Windows")
+
+		create_auto_start("ps", destination_path)
 	default:
 		fmt.Println("Unsupported operating system ")
 
