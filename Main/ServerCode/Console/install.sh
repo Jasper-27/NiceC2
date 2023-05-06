@@ -10,9 +10,6 @@ PROGRAM_NAME="NiceC2"
 INSTALL_DIR="/usr/local/bin/"
 
 
-# Set the version number of your program
-VERSION="1.0.0"
-
 # Build the Golang program
 go build -o $PROGRAM_NAME 
 

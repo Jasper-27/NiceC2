@@ -11,5 +11,5 @@ sh install.sh
 cd ..
 
 ## Install the Console code 
-
+cd Console
 sh Console/install.sh
