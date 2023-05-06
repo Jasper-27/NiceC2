@@ -124,6 +124,8 @@ func installSelf() (error, string) {
 	}
 
 	// Copy the server.crt file to the same directory as the executable.
+
+	fmt.Println("copying cert file")
 	crtFile := "server.crt"
 	crtSrc, err := os.Open(crtFile)
 	if err != nil {
