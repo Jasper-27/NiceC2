@@ -59,7 +59,7 @@ func installSelf() (error, string) {
 	var dst string
 	switch runtime.GOOS {
 	case "linux":
-		dst = "/usr/local/bin/NiceC2/"
+		dst = "/usr/local/bin/NiceC2_agent/"
 	case "darwin":
 		// dst = "/Library/Application Support/NiceC2/"
 
@@ -223,7 +223,7 @@ After=network.target
 
 [Service]
 ExecStart=` + installPath + `
-WorkingDirectory=/usr/local/bin/
+WorkingDirectory=/usr/local/bin/NiceC2_agent/
 Restart=on-failure
 User=root
 
