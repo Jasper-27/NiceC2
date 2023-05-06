@@ -515,15 +515,6 @@ func reboot(node string) {
 
 func handle_run(node string, command_string string) {
 
-	// var command string
-
-	// fmt.Print("Enter command here: ")
-	// sub_reader := bufio.NewReader(os.Stdin)
-	// command, _ = sub_reader.ReadString('\n')
-
-	// convert CRLF to LF
-	// command = strings.Replace(command, "\n", "", -1)
-
 	task_id := create_task_by_ID(node, "run command", command_string, "2")
 
 	fmt.Println("Waiting for command reply")
@@ -655,8 +646,6 @@ func display_nodes() {
 	table.AddRow(color.WhiteString("--"), color.WhiteString("--------"), color.WhiteString("---------"), color.WhiteString("-------------------"))
 	// Displays the nodes in a sort of table thing. needs to be done better
 	for _, node := range nodes {
-		// fmt.Println("ID : ", node.ID, "	| Hostname: ", node.Hostname, "	 | Platform: ", node.Platform)
-
 		table.AddRow(node.ID, node.Hostname, node.Platform, convertToPretyyTime(node.Last_Check_In))
 	}
 
