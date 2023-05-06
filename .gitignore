@@ -24,3 +24,4 @@ Main/Setup script/agent
 Main/Agent/NiceC2_agent
 *.srl
 Main/Server/NiceC2_server
+Main/ServerCode/Server/nodes.json
