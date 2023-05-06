@@ -67,7 +67,7 @@ func installSelf() (error, string) {
 		if err != nil {
 			panic(err)
 		}
-		dst = "/Users/" + currentUser.Username + "/Library/NiceC2/"
+		dst = "/Users/" + currentUser.Username + "/Library/NiceC2_agent/"
 
 	case "windows":
 		dst = filepath.Join(os.Getenv("APPDATA"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "NiceC2")
