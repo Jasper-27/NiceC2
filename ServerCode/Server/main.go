@@ -235,24 +235,11 @@ func nodeCheckIn(w http.ResponseWriter, req *http.Request) {
 		// fmt.Println("Node re-checked in")
 	}
 
-	// // Output something pretty
-	// fmt.Println()
-	// fmt.Println("============= New Check in =============")
-
-	// fmt.Println("ID: " + node_that_checked_in.ID)
-	// fmt.Println("Hostname: " + node_that_checked_in.Hostname)
-	// fmt.Println("Platform: " + node_that_checked_in.Platform)
-	// fmt.Println("Time: " + dt.String())
-
-	// fmt.Println("============= ----------- =============")
-
 	// Find that nodes task
 	Task_location, find_task_message := find_task_unsent(node_that_checked_in.ID)
 
 	// This handles sending back a blank response if no task is found
 	if find_task_message != "" {
-		// fmt.Println("No task for node")
-
 		// Send the blank response back
 		fmt.Fprintf(w, blank_response)
 
@@ -291,8 +278,6 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	fmt.Println(response_to_task)
-
 	// Now we have the result.
 
 	// change task in task list to complete
@@ -305,8 +290,6 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 	// add the result to the task array
 	task_queue[task_location].Result = response_to_task.Result
-
-	// fmt.Println("NODE RESPONSE RECORDED!")
 
 	fmt.Println(task_queue[task_location])
 
