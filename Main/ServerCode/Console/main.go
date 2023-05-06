@@ -413,7 +413,7 @@ func print_help_menu() {
 	table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
 	table.AddRow("payloads", "List all the payloads available in the payloads folder")
 	table.AddRow("cert", "Show the cert needed for new nodes")
-	table.AddRow("Exit", "Exit the NiceC2 command line")
+	table.AddRow("exit", "Exit the NiceC2 command line")
 
 	fmt.Println(table)
 
