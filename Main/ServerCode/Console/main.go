@@ -661,6 +661,8 @@ func display_nodes() {
 	}
 
 	fmt.Println(table)
+
+	fmt.Println("")
 }
 
 func convertToPretyyTime(datetimeStr string) string {
