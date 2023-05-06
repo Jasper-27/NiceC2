@@ -1,6 +1,6 @@
 #!/bin/bash
 
-Echo Installing the NICEC2 Server! 
+echo Installing the NICEC2 Server! 
 
 # Get the hostname for the cirtificates 
 read -p "Enter common name for certificates: " hostname

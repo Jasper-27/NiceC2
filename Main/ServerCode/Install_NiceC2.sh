@@ -12,4 +12,4 @@ cd ..
 
 ## Install the Console code 
 cd Console
-sh Console/install.sh
+sh install.sh
