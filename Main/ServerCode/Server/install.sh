@@ -66,6 +66,10 @@ sudo systemctl enable $PROGRAM_NAME.service
 # Start the service
 sudo systemctl start $PROGRAM_NAME.service
 
+# Restart, in case it's already running
+sudo systemctl restart $PROGRAM_NAME.service
+
+
 echo "Success: Installed $PROGRAM_NAME to $INSTALL_DIR and configured it to start on boot"
 
 echo ""
