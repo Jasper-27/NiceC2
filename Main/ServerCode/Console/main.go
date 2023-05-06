@@ -46,6 +46,10 @@ type Task_Response_Response struct {
 	TaskID string
 }
 
+type cert struct {
+	cert_content string
+}
+
 var nodes []node
 
 var tasks []Task
@@ -125,6 +129,11 @@ func main_loop() {
 		if strings.Compare("exit", text) == 0 {
 			fmt.Println("Goodbye!")
 			return
+		}
+
+		if strings.Compare("cert", text) == 0 {
+			get_cert()
+			command_read = true
 		}
 
 		if strings.Compare("clear", text) == 0 || strings.Compare("cls", text) == 0 {
@@ -403,6 +412,7 @@ func print_help_menu() {
 	table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
 	table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
 	table.AddRow("payloads", "List all the payloads available in the payloads folder")
+	table.AddRow("cert", "Show the cert needed for new nodes")
 	table.AddRow("Exit", "Exit the NiceC2 command line")
 
 	fmt.Println(table)
@@ -442,6 +452,39 @@ func get_file(node string, path string) {
 	fmt.Println("get-file Task created (" + task_id + ")")
 	time.Sleep(5 * time.Second) // Time is added to wait for command to get to / be run on node
 	get_task_by_id(task_id)
+}
+
+func get_cert() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/show_cert", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+	API_response, err := io.ReadAll(res.Body)
+	// b, err := ioutil.ReadAll(resp.Body)  Go.1.15 and earlier
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	API_response_string := string(API_response)
+
+	fmt.Println(API_response_string)
+
 }
 
 func send_file(node string, file string, path string) {
@@ -607,18 +650,6 @@ func display_nodes() {
 		table.MaxColWidth = uint(x)/3 - 5 // Devides x by 2, and rounds down if it's odd
 	}
 	table.Wrap = true
-
-	// table.AddRow(node.ID, node.Hostname, node.Platform)
-	// table.AddRow("ls", "List all nodes")
-	// table.AddRow("use [node]", "Set node you are working on")
-	// table.AddRow("tasks [node]", "view the task queue for that node. Leaving blank will print all tasks")
-	// table.AddRow("run [node]", "run a single command on a node")
-	// table.AddRow("shutdown [node]", "ask a node to shutdown")
-	// table.AddRow("reboot [node]", "ask a node to reboot")
-	// table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
-	// table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
-	// table.AddRow("payloads", "List all the payloads available in the payloads folder")
-	// table.AddRow("Exit", "Exit the NiceC2 command line")
 
 	table.AddRow(color.GreenString("ID"), color.GreenString("HOSTNAME"), color.GreenString("PLATFORM"), color.GreenString("LAST CHECK IN"))
 	table.AddRow(color.WhiteString("--"), color.WhiteString("--------"), color.WhiteString("---------"), color.WhiteString("-------------------"))

