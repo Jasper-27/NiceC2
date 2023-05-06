@@ -60,13 +60,14 @@ var command_server string = "https://localhost:8081"
 func main() {
 
 	fmt.Println()
-	fmt.Println("███    ██ ██  ██████ ███████ " + color.GreenString(" ██████ ██████  "))
-	fmt.Println("████   ██ ██ ██      ██      " + color.GreenString("██           ██ "))
-	fmt.Println("██ ██  ██ ██ ██      █████   " + color.GreenString("██       █████  "))
-	fmt.Println("██  ██ ██ ██ ██      ██      " + color.GreenString("██      ██      "))
-	fmt.Println("██   ████ ██  ██████ ███████ " + color.GreenString(" ██████ ███████ "))
+	fmt.Println("███    ██ ██  ██████ ███████ " + color.RedString(" ██████ ") + color.RedString("██████  "))
+	fmt.Println("████   ██ ██ ██      ██      " + color.RedString("██      ") + color.RedString("     ██ "))
+	fmt.Println("██ ██  ██ ██ ██      █████   " + color.RedString("██      ") + color.RedString(" █████  "))
+	fmt.Println("██  ██ ██ ██ ██      ██      " + color.RedString("██      ") + color.RedString("██      "))
+	fmt.Println("██   ████ ██  ██████ ███████ " + color.RedString(" ██████ ") + color.RedString("███████ "))
 
-	fmt.Println("--------------------------------------------")
+	// fmt.Println(color.YellowString("--------------------------------------------"))
+	fmt.Println("-------------------------------By Jasper Cox")
 
 	fmt.Println("Type 'help' to see a list of commands")
 	fmt.Println()
@@ -133,7 +134,21 @@ func main_loop() {
 		}
 
 		if strings.Compare("exit", text) == 0 {
-			fmt.Println("Goodbye!")
+
+			fmt.Println(color.YellowString(`
+  /$$$$$$                            /$$ /$$$$$$$                      /$$
+ /$$__  $$                          | $$| $$__  $$                    | $$
+| $$  \__/  /$$$$$$   /$$$$$$   /$$$$$$$| $$  \ $$ /$$   /$$  /$$$$$$ | $$
+| $$ /$$$$ /$$__  $$ /$$__  $$ /$$__  $$| $$$$$$$ | $$  | $$ /$$__  $$| $$
+| $$|_  $$| $$  \ $$| $$  \ $$| $$  | $$| $$__  $$| $$  | $$| $$$$$$$$|__/
+| $$  \ $$| $$  | $$| $$  | $$| $$  | $$| $$  \ $$| $$  | $$| $$_____/    
+|  $$$$$$/|  $$$$$$/|  $$$$$$/|  $$$$$$$| $$$$$$$/|  $$$$$$$|  $$$$$$$ /$$
+ \______/  \______/  \______/  \_______/|_______/  \____  $$ \_______/|__/
+                                                   /$$  | $$              
+                                                  |  $$$$$$/              
+                                                   \______/               
+`))
+
 			return
 		}
 
