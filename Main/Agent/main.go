@@ -519,28 +519,28 @@ func runCommand(command string) (outString string, errorMessage string) {
 		shell = "sh"
 	}
 
-	// Change directory
-	if strings.HasPrefix(command, "cd ") {
+	// // Change directory
+	// if strings.HasPrefix(command, "cd ") {
 
-		dir := command[3:] // get the first three chars
+	// 	dir := command[3:] // get the first three chars
 
-		os.Chdir(dir)
+	// 	os.Chdir(dir)
 
-		p(dir)
+	// 	p(dir)
 
-		// run command, and if it causes an error create an error
-		out, err := exec.Command(shell, "-c", "pwd").Output()
-		if err != nil {
-			p(err.Error())
-			// errorMessage = err.Error()
-			errorMessage = "There was an error executing. "
+	// 	// run command, and if it causes an error create an error
+	// 	out, err := exec.Command(shell, "-c", "pwd").Output()
+	// 	if err != nil {
+	// 		p(err.Error())
+	// 		// errorMessage = err.Error()
+	// 		errorMessage = "There was an error executing. "
 
-			return
-		}
+	// 		return
+	// 	}
 
-		outString = string(out)
-		return
-	}
+	// 	outString = string(out)
+	// 	return
+	// }
 
 	// run command, and if it causes an error create an error
 	out, err := exec.Command(shell, "-c", command).Output()
