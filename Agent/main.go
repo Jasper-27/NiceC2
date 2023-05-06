@@ -380,7 +380,7 @@ func get_file(this_taskID string, filepath string) error {
 	req, err := http.NewRequest("POST", command_server+"/get_file", body)
 	if err != nil {
 
-		fmt.Println("Can't creatr a new request")
+		fmt.Println("Can't create a new request")
 		response := Task_Response{this_taskID, "Failed", "Can't creat new request with the multipart body"}
 		send_response(response)
 
