@@ -59,8 +59,14 @@ var command_server string = "https://localhost:8081"
 
 func main() {
 
-	fmt.Println("Welcome to NICE C2")
-	fmt.Println("---------------------")
+	fmt.Println()
+	fmt.Println("███    ██ ██  ██████ ███████ " + color.GreenString(" ██████ ██████  "))
+	fmt.Println("████   ██ ██ ██      ██      " + color.GreenString("██           ██ "))
+	fmt.Println("██ ██  ██ ██ ██      █████   " + color.GreenString("██       █████  "))
+	fmt.Println("██  ██ ██ ██ ██      ██      " + color.GreenString("██      ██      "))
+	fmt.Println("██   ████ ██  ██████ ███████ " + color.GreenString(" ██████ ███████ "))
+
+	fmt.Println("--------------------------------------------")
 
 	fmt.Println("Type 'help' to see a list of commands")
 	fmt.Println()
