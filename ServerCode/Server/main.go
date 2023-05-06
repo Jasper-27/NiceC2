@@ -59,6 +59,7 @@ func handleRequests() {
 
 	// Console endpoints
 	http.HandleFunc("/list_payloads", list_payloads)
+	http.HandleFunc("/list_loot", list_loot)
 	http.HandleFunc("/show_cert", show_cert)
 
 	log.Fatal(http.ListenAndServeTLS(":8081", "server.crt", "server.key", nil))
@@ -106,6 +107,29 @@ func list_payloads(w http.ResponseWriter, req *http.Request) {
 		// return nil, err
 
 		fmt.Println("Error reading payloads dir")
+		return
+	}
+	var fileNames []string
+	for _, file := range files {
+		fileNames = append(fileNames, file.Name())
+	}
+
+	json_paylods, err := sliceToJSON(fileNames)
+	if err != nil {
+		fmt.Println("couldn't decode JSON slice")
+	}
+
+	fmt.Fprintf(w, json_paylods)
+
+}
+
+func list_loot(w http.ResponseWriter, req *http.Request) {
+
+	files, err := ioutil.ReadDir("loot/")
+	if err != nil {
+		// return nil, err
+
+		fmt.Println("Error reading loots dir")
 		return
 	}
 	var fileNames []string
@@ -314,7 +338,7 @@ func get_file_handler(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Create a new file on the server with the same name as the uploaded file
-	filepath := "./uploads/" + handler.Filename
+	filepath := "./loot/" + handler.Filename
 	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

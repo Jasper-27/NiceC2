@@ -17,7 +17,7 @@ mkdir $INSTALL_DIR
 # Making the uploads and payloads folder 
 
 mkdir $INSTALL_DIR/payloads/
-mkdir $INSTALL_DIR/uploads/
+mkdir $INSTALL_DIR/loot/
 
 # Set the version number of your program
 VERSION="1.0.0"

