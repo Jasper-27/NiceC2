@@ -134,6 +134,7 @@ func main_loop() {
 		}
 
 		if strings.Compare("exit", text) == 0 {
+			// Goodbye!
 
 			fmt.Println(color.YellowString(`
   /$$$$$$                            /$$ /$$$$$$$                      /$$
@@ -149,7 +150,7 @@ func main_loop() {
                                                    \______/               
 `))
 
-			return
+			os.Exit(0)
 		}
 
 		if strings.Compare("cert", text) == 0 {
@@ -321,23 +322,27 @@ func main_loop() {
 				//
 				split_no_target := strings.Split(split_1[0], " -d ")
 				if len(split_no_target) != 2 {
-					fmt.Println("Error splitting")
+					fmt.Println(color.RedString("Error: ") + "Could not parse input. Missing -d desitnation")
+					main_loop()
 				}
 
 				file = split_no_target[0]
 				destination = split_no_target[1]
 
-			}
-			if len(split_1) == 2 {
+			} else if len(split_1) == 2 {
 				split_2 := strings.Split(split_1[1], " -d ")
 				if len(split_2) != 2 {
-					fmt.Println("Error splitting")
+					fmt.Println(color.RedString("Error: ") + "Could not parse input. Missing -d desitnation")
+					main_loop()
 				}
 
 				custom_target = strings.TrimSpace(split_1[0]) // trim space is needed as splitting ads a space on the end
 				file = split_2[0]
 				destination = split_2[1]
 
+			} else {
+				fmt.Println("Error splitting String")
+				return
 			}
 
 			if custom_target != "" {
@@ -371,12 +376,6 @@ func main_loop() {
 				node = strings.TrimSpace(split[0])
 			} else {
 				node = target
-				if len(node) < 1 {
-					// if there is no node. We should just start over.
-
-					fmt.Println("Can't find a target")
-					main_loop()
-				}
 			}
 
 			path = split[1]
@@ -480,7 +479,8 @@ func get_cert() {
 	r, err := http.NewRequest("", command_server+"/show_cert", bytes.NewBuffer([]byte("")))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -491,7 +491,8 @@ func get_cert() {
 	res, err := client.Do(r)
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 	API_response, err := io.ReadAll(res.Body)
 	// b, err := ioutil.ReadAll(resp.Body)  Go.1.15 and earlier
@@ -727,7 +728,8 @@ func get_nodes() {
 	r, err := http.NewRequest("", command_server+"/get_nodes", bytes.NewBuffer([]byte("")))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -737,7 +739,8 @@ func get_nodes() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 		return
 	}
 
@@ -758,6 +761,12 @@ func get_nodes() {
 
 func create_task_by_ID(nodeID string, task string, arg string, key string) string {
 
+	if nodeID == "" {
+		fmt.Println(color.RedString("ERROR: ") + "No node specified")
+		main_loop()
+		return ""
+	}
+
 	// This allows us to use a self signed certificate.
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -771,7 +780,8 @@ func create_task_by_ID(nodeID string, task string, arg string, key string) strin
 	r, err := http.NewRequest("", command_server+"/create_task", bytes.NewBuffer([]byte(task_create_request)))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -782,7 +792,8 @@ func create_task_by_ID(nodeID string, task string, arg string, key string) strin
 	res, err := client.Do(r)
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Decode the json body
@@ -842,7 +853,8 @@ func get_tasks() {
 	r, err := http.NewRequest("", command_server+"/get_tasks", bytes.NewBuffer([]byte("")))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -852,7 +864,8 @@ func get_tasks() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 		return
 	}
 
@@ -879,7 +892,8 @@ func get_payloads_from_server() {
 	r, err := http.NewRequest("", command_server+"/list_payloads", bytes.NewBuffer([]byte("")))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -889,7 +903,8 @@ func get_payloads_from_server() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 		return
 	}
 
@@ -929,7 +944,8 @@ func get_loot_from_server() {
 	r, err := http.NewRequest("", command_server+"/list_loot", bytes.NewBuffer([]byte("")))
 	if err != nil {
 		// panic(err)
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 	}
 
 	// Add the header to say that it's json
@@ -939,7 +955,8 @@ func get_loot_from_server() {
 	client := &http.Client{}
 	res, err := client.Do(r)
 	if err != nil {
-		fmt.Println("Error sending the commands response back")
+		fmt.Println(color.RedString("ERROR: ") + "can't communicate with server.")
+		main_loop()
 		return
 	}
 
